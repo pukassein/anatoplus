@@ -38,11 +38,14 @@ export const api = {
     },
 
     signUp: async (email: string, password: string, fullName: string, birthDate: string, affiliation: string) => {
+      // Get the current URL (e.g., https://anatoplus.com or http://localhost:3000)
+      const redirectUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin, // Ensures the link goes to the current domain
+          emailRedirectTo: redirectUrl, // Dynamic redirect based on where the user is
           // This data is passed to the 'handle_new_user' trigger in SQL
           data: {
             full_name: fullName,
@@ -78,6 +81,17 @@ export const api = {
           isActive: data.is_active, // Map from DB column
           planId: data.plan_id
       };
+    },
+    
+    // Updates the session ID in the DB to match the current device
+    updateUserSessionId: async (userId: string, sessionId: string) => {
+        if (!USE_DATABASE) return;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ last_session_id: sessionId })
+            .eq('id', userId);
+            
+        if (error) console.error("Error updating session ID", error);
     }
   },
 
@@ -107,12 +121,19 @@ export const api = {
   updateUserStatus: async (userId: string, isActive: boolean) => {
       if (!USE_DATABASE) return;
       
-      const { error } = await supabase
+      // Perform update and return the modified row to confirm success
+      const { data, error } = await supabase
         .from('profiles')
         .update({ is_active: isActive })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
       
       if (error) throw error;
+
+      // If no rows were returned, the update failed (likely due to RLS policies)
+      if (!data || data.length === 0) {
+          throw new Error("No se pudo actualizar. Verifique que sus políticas RLS permitan al administrador editar usuarios.");
+      }
   },
 
   // --- PAYMENTS & PLANS ---

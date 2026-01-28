@@ -27,12 +27,17 @@ const AdminUsers: React.FC = () => {
   }, []);
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+      // Optimistic update
+      const originalUsers = [...users];
+      setUsers(users.map(u => u.id === userId ? { ...u, isActive: !currentStatus } : u));
+      
       try {
           await api.updateUserStatus(userId, !currentStatus);
-          // Optimistic update
-          setUsers(users.map(u => u.id === userId ? { ...u, isActive: !currentStatus } : u));
-      } catch (err) {
-          alert("Error al actualizar estado del usuario.");
+      } catch (err: any) {
+          // Revert on failure
+          setUsers(originalUsers);
+          alert(`Error: ${err.message || "Error al actualizar estado del usuario."}`);
+          console.error(err);
       }
   };
 

@@ -14,12 +14,16 @@ import SubtopicList from './components/SubtopicList';
 import QuizView from './components/QuizView';
 import Performance from './components/Performance';
 import SubscriptionPlans from './components/SubscriptionPlans'; 
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.LOGIN);
   
+  // Single Session Logic
+  const [deviceSessionId] = useState<string>(() => Math.random().toString(36).substring(2) + Date.now().toString(36));
+  const [isSessionConflict, setIsSessionConflict] = useState(false);
+
   // Ref to track currentView inside callbacks/listeners to avoid stale closures
   const viewRef = useRef(currentView);
 
@@ -60,11 +64,62 @@ const App: React.FC = () => {
         setUser(null);
         setCurrentView(ViewState.LOGIN);
         setIsAuthChecking(false);
+        setIsSessionConflict(false); // Reset conflict on logout
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // --- SINGLE SESSION REALTIME LISTENER ---
+  useEffect(() => {
+    if (!user) return;
+
+    // 1. Claim the session immediately upon login
+    api.auth.updateUserSessionId(user.id, deviceSessionId);
+
+    // 2. Subscribe to changes in the profiles table
+    const channel = supabase
+      .channel('session_guard')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newSessionId = payload.new.last_session_id;
+          // If the DB says the active session ID is different from mine, trigger conflict
+          if (newSessionId && newSessionId !== deviceSessionId) {
+            setIsSessionConflict(true);
+          } else {
+             // If it matches (e.g. I reclaimed it), clear conflict
+            setIsSessionConflict(false);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, deviceSessionId]);
+
+  const handleClaimSession = async () => {
+      if (!user) return;
+      setIsLoading(true);
+      try {
+          // Update DB with OUR session ID again. This will trigger the realtime listener on the OTHER device.
+          await api.auth.updateUserSessionId(user.id, deviceSessionId);
+          setIsSessionConflict(false);
+      } catch (error) {
+          console.error(error);
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
   const fetchProfileAndSetUser = async (userId: string, email: string) => {
      try {
@@ -116,14 +171,16 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    // Force reset state immediately to ensure UI updates even if network fails
+    // Clear user state FIRST to make UI responsive immediately
+    setUser(null);
+    setCurrentView(ViewState.LOGIN);
+    setIsSessionConflict(false);
+    
+    // Then attempt API logout (fire and forget)
     try {
       await api.auth.signOut();
     } catch (e) {
-      console.error("Error signing out:", e);
-    } finally {
-      setUser(null);
-      setCurrentView(ViewState.LOGIN);
+      console.warn("API SignOut warning:", e);
     }
   };
 
@@ -278,6 +335,37 @@ const App: React.FC = () => {
       </div>
     </div>
   );
+
+  // Session Conflict Modal
+  if (isSessionConflict) {
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white max-w-md w-full rounded-2xl p-8 shadow-2xl text-center animate-scale-up border-4 border-red-100">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                    <ShieldAlert size={40} className="text-red-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Sesión Activa en Otro Dispositivo</h2>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                    Hemos detectado que tu cuenta se ha abierto en otro dispositivo o navegador. Por seguridad, esta sesión ha sido pausada.
+                </p>
+                <div className="flex flex-col gap-3">
+                    <button 
+                        onClick={handleClaimSession}
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md active:scale-95"
+                    >
+                        Continuar aquí
+                    </button>
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full bg-white border border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+      );
+  }
 
   if (isAuthChecking) {
     return <LoadingOverlay />;
