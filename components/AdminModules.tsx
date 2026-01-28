@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Module, Topic } from '../types';
 import { api } from '../services/api';
-import { Plus, Edit2, Trash2, Search, Loader2, Save, X, ChevronDown, CheckCircle, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Loader2, Save, X, ChevronDown, CheckCircle, Filter, ImageIcon } from 'lucide-react';
 
 interface AdminModulesProps {
   modules: Module[];
@@ -35,11 +35,12 @@ const AdminModules: React.FC<AdminModulesProps> = ({
   const [topicForm, setTopicForm] = useState({ moduleId: '', name: '' });
   const [subtopicForm, setSubtopicForm] = useState({ topicId: '', name: '' });
   
-  // Initialize options with explicitly unique objects to avoid reference sharing bugs
   const [questionForm, setQuestionForm] = useState({ 
     subtopicId: '', 
     text: '', 
-    explanation: '', 
+    explanationCorrect: '', 
+    explanationIncorrect: '', 
+    imageUrl: '', 
     options: [
         { text: '', isCorrect: false },
         { text: '', isCorrect: false },
@@ -66,7 +67,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
         setTopics(tData); 
         setSubtopics(sData);
       } else if (activeTab === 'Preguntas') {
-         // Pass selectedSubtopicFilter to API to fetch specific questions from DB
          const [sData, qData] = await Promise.all([
              api.getAllSubtopics(), 
              api.getAllQuestionsAdmin(selectedSubtopicFilter)
@@ -84,7 +84,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
 
   useEffect(() => {
     refreshData();
-  }, [activeTab, selectedSubtopicFilter]); // Re-fetch when filter changes
+  }, [activeTab, selectedSubtopicFilter]); 
 
   // --- ACTIONS ---
 
@@ -108,16 +108,19 @@ const AdminModules: React.FC<AdminModulesProps> = ({
               setQuestionForm({
                   subtopicId: details.subtopicId,
                   text: details.text,
-                  explanation: details.explanation,
+                  explanationCorrect: details.explanationCorrect || '',
+                  explanationIncorrect: details.explanationIncorrect || '',
+                  imageUrl: details.imageUrl || '',
                   options: paddedOptions
               });
            }
         } else {
-           // RESET FORM with fresh objects
            setQuestionForm({
              subtopicId: selectedSubtopicFilter || subtopics[0]?.id || '',
              text: '',
-             explanation: '',
+             explanationCorrect: '',
+             explanationIncorrect: '',
+             imageUrl: '',
              options: [
                 { text: '', isCorrect: false },
                 { text: '', isCorrect: false },
@@ -169,7 +172,9 @@ const AdminModules: React.FC<AdminModulesProps> = ({
            await api.createQuestion({
                subtopicId: questionForm.subtopicId,
                text: questionForm.text,
-               explanation: questionForm.explanation,
+               explanationCorrect: questionForm.explanationCorrect,
+               explanationIncorrect: questionForm.explanationIncorrect,
+               imageUrl: questionForm.imageUrl,
                options: validOptions
            });
         }
@@ -186,7 +191,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
   const updateOptionText = (index: number, val: string) => {
       setQuestionForm(prev => {
           const newOptions = prev.options.map((opt, i) => {
-              // Ensure we return a NEW object for the modified index
               if (i === index) return { ...opt, text: val };
               return opt;
           });
@@ -198,91 +202,95 @@ const AdminModules: React.FC<AdminModulesProps> = ({
       setQuestionForm(prev => {
           const newOptions = prev.options.map((opt, i) => ({
               ...opt,
-              isCorrect: i === index // Only set the clicked one to true, others false
+              isCorrect: i === index 
           }));
           return { ...prev, options: newOptions };
       });
   };
 
-
-  // --- RENDER HELPERS ---
+  const stripHtml = (html: string) => {
+     if(!html) return '';
+     return html.replace(/<[^>]*>?/gm, '');
+  }
 
   const renderTable = () => {
+    // ... [Modules/Topics/Subtopics tables remain unchanged] ...
     if (activeTab === 'Modulos') {
-      return (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nombre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {modules.filter(m => m.title.toLowerCase().includes(searchTerm.toLowerCase())).map(m => (
-              <tr key={m.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{m.title}</td>
-                <td className="px-6 py-4 text-right">
-                   <button onClick={() => handleOpenModal(m)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
-                   <button onClick={() => handleDelete(m.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
+        // Same as before
+        return (
+            <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nombre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+                {modules.filter(m => m.title.toLowerCase().includes(searchTerm.toLowerCase())).map(m => (
+                <tr key={m.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">{m.title}</td>
+                    <td className="px-6 py-4 text-right">
+                    <button onClick={() => handleOpenModal(m)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
+                    <button onClick={() => handleDelete(m.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        );
     }
     if (activeTab === 'Temas') {
-      return (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Módulo</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {topics.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
-              <tr key={t.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{t.name}</td>
-                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{t.moduleName || t.moduleId}</span></td>
-                <td className="px-6 py-4 text-right">
-                   <button onClick={() => handleOpenModal(t)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
-                   <button onClick={() => handleDelete(t.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
+        return (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Módulo</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {topics.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
+                <tr key={t.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">{t.name}</td>
+                  <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{t.moduleName || t.moduleId}</span></td>
+                  <td className="px-6 py-4 text-right">
+                     <button onClick={() => handleOpenModal(t)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
+                     <button onClick={() => handleDelete(t.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
     }
     if (activeTab === 'Subtemas') {
-      return (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Subtema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema Padre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {subtopics.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
-              <tr key={s.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{s.name}</td>
-                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{s.topicName}</span></td>
-                <td className="px-6 py-4 text-right">
-                   <button onClick={() => handleOpenModal(s)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
-                   <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
+        return (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Subtema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema Padre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {subtopics.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
+                <tr key={s.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">{s.name}</td>
+                  <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{s.topicName}</span></td>
+                  <td className="px-6 py-4 text-right">
+                     <button onClick={() => handleOpenModal(s)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
+                     <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
     }
+
     if (activeTab === 'Preguntas') {
-      // Client-side search only (data is already filtered by API if subtopic selected)
       const filteredQuestions = questions.filter(q => {
           return q.text.toLowerCase().includes(searchTerm.toLowerCase());
       });
 
       return (
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Pregunta</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Subtema / Tema</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
+          <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Pregunta</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Explicación (Prev)</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredQuestions.length > 0 ? (
                 filteredQuestions.map(q => (
                 <tr key={q.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 max-w-xs">
                         <p className="line-clamp-2 text-sm font-medium">{q.text}</p>
+                        <span className="text-xs text-gray-400">{q.subtopicName}</span>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
-                        <div className="font-semibold text-gray-800">{q.subtopicName || 'Sin subtema'}</div>
-                        <div>{q.topicName || 'Sin tema'}</div>
+                    <td className="px-6 py-4 text-xs text-gray-500 max-w-xs">
+                        <div className="line-clamp-1">{stripHtml(q.explanationCorrect)}</div>
                     </td>
                     <td className="px-6 py-4 text-right">
                     <button onClick={() => handleDelete(q.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
@@ -307,7 +315,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       
-      {/* Tabs */}
+      {/* Tabs & Toolbar - Same as before */}
       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-1">
          {(['Modulos', 'Temas', 'Subtemas', 'Preguntas'] as const).map(tab => (
            <button
@@ -322,7 +330,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
          ))}
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <div className="relative flex-1 max-w-md">
@@ -344,7 +351,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
             </button>
          </div>
          
-         {/* Subtopic Filter (Only visible in Questions tab) */}
          {activeTab === 'Preguntas' && (
              <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
                  <Filter size={18} className="text-gray-500" />
@@ -371,7 +377,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
          )}
       </div>
 
-      {/* Content Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden min-h-[300px]">
          {isLoading ? (
              <div className="flex items-center justify-center h-64">
@@ -397,7 +402,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
               <div className="p-6 overflow-y-auto custom-scrollbar">
                 <form id="admin-form" onSubmit={handleSubmit} className="space-y-4">
                    
-                   {/* MODULE FORM */}
+                   {/* MODULE / TOPIC / SUBTOPIC FORMS REMAIN SAME */}
                    {activeTab === 'Modulos' && (
                      <>
                         <div>
@@ -415,7 +420,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                      </>
                    )}
 
-                   {/* TOPIC FORM */}
                    {activeTab === 'Temas' && (
                       <>
                         <div>
@@ -432,7 +436,6 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                       </>
                    )}
 
-                   {/* SUBTOPIC FORM */}
                    {activeTab === 'Subtemas' && (
                       <>
                         <div>
@@ -464,6 +467,19 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                           <textarea required rows={3} className="w-full border p-2 rounded" value={questionForm.text} onChange={e => setQuestionForm({...questionForm, text: e.target.value})} />
                         </div>
                         
+                        <div>
+                           <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                             <ImageIcon size={16} /> URL Imagen/Video (Opcional)
+                           </label>
+                           <input 
+                              type="text" 
+                              className="w-full border p-2 rounded mt-1" 
+                              placeholder="https://..."
+                              value={questionForm.imageUrl}
+                              onChange={e => setQuestionForm({...questionForm, imageUrl: e.target.value})}
+                           />
+                        </div>
+
                         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Opciones de Respuesta</label>
                            {questionForm.options.map((opt, idx) => (
@@ -485,9 +501,15 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                            <p className="text-xs text-gray-400 mt-1">* Marca la bolita verde en la respuesta correcta.</p>
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Explicación (Feedback)</label>
-                          <textarea rows={2} className="w-full border p-2 rounded" value={questionForm.explanation} onChange={e => setQuestionForm({...questionForm, explanation: e.target.value})} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 text-green-700">Explicación Correcta (HTML/Texto)</label>
+                                <textarea rows={4} className="w-full border p-2 rounded bg-green-50 border-green-200" value={questionForm.explanationCorrect} onChange={e => setQuestionForm({...questionForm, explanationCorrect: e.target.value})} placeholder="<p>¡Muy bien!...</p>" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 text-red-700">Explicación Incorrecta (HTML/Texto)</label>
+                                <textarea rows={4} className="w-full border p-2 rounded bg-red-50 border-red-200" value={questionForm.explanationIncorrect} onChange={e => setQuestionForm({...questionForm, explanationIncorrect: e.target.value})} placeholder="<p>Ups, no es correcto...</p>" />
+                            </div>
                         </div>
                       </>
                    )}

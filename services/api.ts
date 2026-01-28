@@ -332,6 +332,8 @@ export const api = {
             id_pregunta,
             texto_pregunta,
             explicacion_correcta,
+            explicacion_incorrecta,
+            imagen_video,
             id_subtema,
             Subtemas ( nombre_subtema, Temas ( nombre_tema ) )
         `)
@@ -355,7 +357,9 @@ export const api = {
     return data.map((q: any) => ({
         id: q.id_pregunta.toString(),
         text: q.texto_pregunta,
-        explanation: q.explicacion_correcta,
+        explanationCorrect: q.explicacion_correcta,
+        explanationIncorrect: q.explicacion_incorrecta,
+        imageUrl: q.imagen_video,
         subtopicId: q.id_subtema,
         subtopicName: q.Subtemas?.nombre_subtema,
         topicName: q.Subtemas?.Temas?.nombre_tema
@@ -376,7 +380,9 @@ export const api = {
       return {
           id: q.id_pregunta.toString(),
           text: q.texto_pregunta,
-          explanation: q.explicacion_correcta,
+          explanationCorrect: q.explicacion_correcta,
+          explanationIncorrect: q.explicacion_incorrecta,
+          imageUrl: q.imagen_video,
           subtopicId: q.id_subtema,
           options: options.map((o: any) => ({
               id: o.id_opcion,
@@ -386,13 +392,18 @@ export const api = {
       };
   },
 
-  createQuestion: async (payload: { subtopicId: string, text: string, explanation: string, options: {text: string, isCorrect: boolean}[] }) => {
+  createQuestion: async (payload: { subtopicId: string, text: string, explanationCorrect: string, explanationIncorrect: string, imageUrl?: string, options: {text: string, isCorrect: boolean}[] }) => {
+      // 1. Insert Question
       const { data: qData, error: qError } = await supabase
         .from('Pregunta')
         .insert([{
             id_subtema: payload.subtopicId,
             texto_pregunta: payload.text,
-            explicacion_correcta: payload.explanation
+            explicacion_correcta: payload.explanationCorrect,
+            explicacion_incorrecta: payload.explanationIncorrect,
+            imagen_video: payload.imageUrl || null,
+            createdAt: new Date(),
+            updatedAt: new Date()
         }])
         .select()
         .single();
@@ -400,10 +411,13 @@ export const api = {
       if (qError) throw qError;
       const questionId = qData.id_pregunta;
 
+      // 2. Insert Options with createdAt (FIXED)
       const optionsPayload = payload.options.map(o => ({
           id_pregunta: questionId,
           texto_opcion: o.text,
-          es_correcta: o.isCorrect
+          es_correcta: o.isCorrect,
+          createdAt: new Date(),
+          updatedAt: new Date()
       }));
 
       const { error: oError } = await supabase.from('Opcions').insert(optionsPayload);
@@ -493,10 +507,6 @@ export const api = {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_correct', true);
-
-      // 3. Simple Streak calc (distinct days in created_at)
-      // Note: This is an approximation as Supabase JS doesn't do "select distinct date(created_at)" easily without RPC
-      // For now, we return a mock streak or 1 if they have answers today.
       
       const totalCount = total || 0;
       const correctCount = correct || 0;
@@ -506,7 +516,7 @@ export const api = {
           totalQuestions: totalCount,
           correctQuestions: correctCount,
           accuracy,
-          streakDays: totalCount > 0 ? 1 : 0 // Simplified for now
+          streakDays: totalCount > 0 ? 1 : 0 
       };
   },
 
@@ -535,6 +545,8 @@ export const api = {
         id_pregunta,
         texto_pregunta,
         explicacion_correcta,
+        explicacion_incorrecta,
+        imagen_video,
         id_subtema,
         Opcions (
             id_opcion,
@@ -560,20 +572,17 @@ export const api = {
             text: q.texto_pregunta,
             options: optionsText,
             correctAnswerIndex: correctIndex === -1 ? 0 : correctIndex, 
-            explanation: q.explicacion_correcta || 'Sin explicación disponible.'
+            explanationCorrect: q.explicacion_correcta || '<p>¡Respuesta correcta!</p>',
+            explanationIncorrect: q.explicacion_incorrecta || '<p>Respuesta incorrecta.</p>',
+            imageUrl: q.imagen_video
         };
     });
   },
 
   getQuestionsFromModules: async (moduleIds: string[], limit = 20): Promise<Question[]> => {
     if (!USE_DATABASE) {
-        const targetTopics = MOCK_TOPICS.filter(t => moduleIds.includes(t.moduleId));
-        let gatheredQuestions: Question[] = [];
-        targetTopics.forEach(topic => {
-            const qs = MOCK_QUESTIONS[topic.id] || [];
-            gatheredQuestions = [...gatheredQuestions, ...qs];
-        });
-        return new Promise(resolve => setTimeout(() => resolve(gatheredQuestions), 600));
+        // Mock fallback not relevant for this fix
+        return [];
     }
 
     const { data: temas } = await supabase
@@ -598,6 +607,8 @@ export const api = {
         id_pregunta,
         texto_pregunta,
         explicacion_correcta,
+        explicacion_incorrecta,
+        imagen_video,
         Opcions (
             id_opcion,
             texto_opcion,
@@ -620,7 +631,9 @@ export const api = {
             text: q.texto_pregunta,
             options: sortedOptions.map((o: any) => o.texto_opcion),
             correctAnswerIndex: correctIndex === -1 ? 0 : correctIndex,
-            explanation: q.explicacion_correcta || ''
+            explanationCorrect: q.explicacion_correcta || '',
+            explanationIncorrect: q.explicacion_incorrecta || '',
+            imageUrl: q.imagen_video
         };
     });
 

@@ -45,7 +45,9 @@ export interface Question {
   text: string;
   options: string[];
   correctAnswerIndex: number;
-  explanation: string;
+  explanationCorrect: string;   // Explanation when user gets it right
+  explanationIncorrect: string; // Explanation when user gets it wrong
+  imageUrl?: string; 
 }
 
 export interface QuizSession {

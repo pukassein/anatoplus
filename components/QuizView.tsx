@@ -184,6 +184,8 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
           {questions.map((q, idx) => {
             const userAnswer = userAnswers[idx];
             const isCorrect = userAnswer === q.correctAnswerIndex;
+            // Decide which explanation to show based on correctness
+            const explanationHtml = isCorrect ? q.explanationCorrect : q.explanationIncorrect;
             
             return (
               <div key={q.id} className={`bg-white rounded-xl shadow-sm border p-6 ${isCorrect ? 'border-gray-200' : 'border-red-200 bg-red-50/10'}`}>
@@ -219,7 +221,15 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
                   
                   <div className="mt-4 pt-3 border-t border-gray-100 text-sm">
                     <span className="font-semibold text-gray-700">Explicación:</span>
-                    <p className="text-gray-600 mt-1">{q.explanation}</p>
+                    <div 
+                      className="text-gray-600 mt-1 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: explanationHtml }}
+                    />
+                    {q.imageUrl && (
+                       <div className="mt-3">
+                          <img src={q.imageUrl} alt="Explicación visual" className="rounded-lg max-h-60 object-contain border border-gray-200" />
+                       </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -229,6 +239,11 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
       </div>
     );
   }
+
+  // Logic to determine which explanation to show in LIVE quiz mode
+  const currentExplanation = selectedOption === currentQuestion.correctAnswerIndex 
+    ? currentQuestion.explanationCorrect 
+    : currentQuestion.explanationIncorrect;
 
   // QUIZ VIEW
   return (
@@ -343,11 +358,17 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
           <div className="bg-blue-50 p-6 border-t border-blue-100 animate-slide-up">
             <div className="flex gap-3">
                <AlertCircle className="text-blue-600 shrink-0 mt-0.5" size={24} />
-               <div>
+               <div className="w-full">
                  <h4 className="font-bold text-blue-900 mb-1">Explicación</h4>
-                 <p className="text-blue-800 text-sm leading-relaxed">
-                   {currentQuestion.explanation}
-                 </p>
+                 <div 
+                   className="text-blue-800 text-sm leading-relaxed prose prose-sm max-w-none"
+                   dangerouslySetInnerHTML={{ __html: currentExplanation }}
+                 />
+                 {currentQuestion.imageUrl && (
+                    <div className="mt-3">
+                        <img src={currentQuestion.imageUrl} alt="Explicación visual" className="rounded-lg max-h-60 object-contain border border-blue-200" />
+                    </div>
+                 )}
                </div>
             </div>
           </div>

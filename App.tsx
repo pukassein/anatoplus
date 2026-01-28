@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ViewState, Module, Topic, User, Question } from './types';
 import { api, supabase } from './services/api'; // Import supabase instance for listener
 import Layout from './components/Layout';
@@ -17,6 +17,9 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.LOGIN);
   
+  // Ref to track currentView inside callbacks/listeners to avoid stale closures
+  const viewRef = useRef(currentView);
+
   // Data State
   const [modules, setModules] = useState<Module[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -27,6 +30,11 @@ const App: React.FC = () => {
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+
+  // Keep the Ref in sync with state
+  useEffect(() => {
+    viewRef.current = currentView;
+  }, [currentView]);
 
   // --- AUTHENTICATION LISTENER ---
 
@@ -40,9 +48,10 @@ const App: React.FC = () => {
       }
     });
 
-    // 2. Listen for auth changes (SignIn, SignOut)
+    // 2. Listen for auth changes (SignIn, SignOut, Token Refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
+        // This runs on tab focus/token refresh. We must use viewRef to check current state.
         fetchProfileAndSetUser(session.user.id, session.user.email!);
       } else {
         setUser(null);
@@ -64,8 +73,11 @@ const App: React.FC = () => {
        const userObj: User = { id: userId, name, email, role };
        
        setUser(userObj);
-       // Redirect if currently on login screen
-       if (currentView === ViewState.LOGIN) {
+
+       // FIX: Use viewRef.current instead of currentView to avoid stale closure.
+       // Only redirect if we are currently on the LOGIN screen (initial load).
+       // If we are already in DASHBOARD (even as Admin viewing student mode), do NOT redirect.
+       if (viewRef.current === ViewState.LOGIN) {
          // Admins go to Admin Dashboard, Students go to standard Dashboard
          setCurrentView(role === 'admin' ? ViewState.ADMIN_DASHBOARD : ViewState.DASHBOARD);
        }
@@ -79,6 +91,7 @@ const App: React.FC = () => {
   // --- DATA LOADING ---
 
   useEffect(() => {
+    // Only load modules if user is set and we are in the Dashboard view
     if (user && currentView === ViewState.DASHBOARD) {
       loadModules(user.id);
     }
