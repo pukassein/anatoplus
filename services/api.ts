@@ -42,6 +42,7 @@ export const api = {
         email,
         password,
         options: {
+          emailRedirectTo: window.location.origin, // Ensures the link goes to the current domain
           // This data is passed to the 'handle_new_user' trigger in SQL
           data: {
             full_name: fullName,

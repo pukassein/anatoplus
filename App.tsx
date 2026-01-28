@@ -116,7 +116,15 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await api.auth.signOut();
+    // Force reset state immediately to ensure UI updates even if network fails
+    try {
+      await api.auth.signOut();
+    } catch (e) {
+      console.error("Error signing out:", e);
+    } finally {
+      setUser(null);
+      setCurrentView(ViewState.LOGIN);
+    }
   };
 
   const handleNavigate = (view: ViewState) => {
