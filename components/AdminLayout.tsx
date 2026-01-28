@@ -42,16 +42,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
     );
   };
 
-  const MockNavItem = ({ label, icon: Icon }: { label: string; icon: any }) => (
-    <button
-      className="w-full flex items-center space-x-3 px-4 py-3 rounded-r-full transition-colors duration-200 mb-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600 border-l-4 border-transparent cursor-not-allowed opacity-70"
-      title="Próximamente"
-    >
-      <Icon size={20} />
-      <span>{label}</span>
-    </button>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
@@ -81,9 +71,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
           <NavItem view={ViewState.ADMIN_DASHBOARD} label="Dashboard" icon={LayoutDashboard} />
           <NavItem view={ViewState.ADMIN_QUESTIONS} label="Preguntas" icon={HelpCircle} />
           <NavItem view={ViewState.ADMIN_USERS} label="Usuarios" icon={Users} />
+          <NavItem view={ViewState.ADMIN_PAYMENTS} label="Pagos" icon={Wallet} />
           <NavItem view={ViewState.ADMIN_COMMENTS} label="Comentarios" icon={MessageSquare} />
           <NavItem view={ViewState.ADMIN_PLANS} label="Planes" icon={CreditCard} />
-          <MockNavItem label="Pagos" icon={Wallet} />
           
           <div className="mt-8 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
             Navegación
@@ -138,11 +128,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
                {currentView === ViewState.ADMIN_USERS && 'Usuarios'}
                {currentView === ViewState.ADMIN_COMMENTS && 'Comentarios'}
                {currentView === ViewState.ADMIN_PLANS && 'Planes y Precios'}
+               {currentView === ViewState.ADMIN_PAYMENTS && 'Solicitudes de Pago'}
              </h1>
            </div>
            
            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500 hidden sm:block">v1.2.0</span>
+              <span className="text-sm text-gray-500 hidden sm:block">v1.3.0</span>
            </div>
         </header>
 

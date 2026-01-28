@@ -6,7 +6,8 @@ import {
   LogOut, 
   Menu,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Crown
 } from 'lucide-react';
 import { User, ViewState } from '../types';
 
@@ -60,6 +61,18 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
               <NavItem view={ViewState.DASHBOARD} label="Módulos" icon={BookOpen} />
               <NavItem view={ViewState.PERFORMANCE} label="Desempeño" icon={BarChart2} />
               
+              <button 
+                  onClick={() => onNavigate(ViewState.SUBSCRIPTION)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+                      user.isActive 
+                      ? 'text-gray-400 hover:text-amber-500' 
+                      : 'bg-amber-100 text-amber-700 font-bold border border-amber-200 animate-pulse'
+                  }`}
+              >
+                  <Crown size={20} />
+                  <span>{user.isActive ? 'Mi Plan' : 'Ser Premium'}</span>
+              </button>
+
               {/* ADMIN BUTTON */}
               {user.role === 'admin' && (
                 <button
@@ -110,6 +123,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
               <NavItem view={ViewState.DASHBOARD} label="Módulos" icon={BookOpen} />
               <NavItem view={ViewState.PERFORMANCE} label="Desempeño" icon={BarChart2} />
               
+              <button
+                onClick={() => {
+                    onNavigate(ViewState.SUBSCRIPTION);
+                    setIsMobileMenuOpen(false);
+                }}
+                className="flex w-full items-center space-x-2 px-4 py-2 rounded-lg text-amber-600 font-bold hover:bg-amber-50"
+              >
+                <Crown size={20} />
+                <span>Planes Premium</span>
+              </button>
+
               {user.role === 'admin' && (
                  <button
                     onClick={() => {

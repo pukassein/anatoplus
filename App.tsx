@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ViewState, Module, Topic, User, Question } from './types';
+import { ViewState, Module, Topic, Subtopic, User, Question } from './types';
 import { api, supabase } from './services/api'; // Import supabase instance for listener
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import AdminModules from './components/AdminModules';
-import AdminUsers from './components/AdminUsers'; // Imported
-import AdminPlans from './components/AdminPlans'; // Imported
+import AdminUsers from './components/AdminUsers'; 
+import AdminPlans from './components/AdminPlans'; 
+import AdminPayments from './components/AdminPayments'; // New import
 import TopicList from './components/TopicList';
+import SubtopicList from './components/SubtopicList'; 
 import QuizView from './components/QuizView';
 import Performance from './components/Performance';
+import SubscriptionPlans from './components/SubscriptionPlans'; 
 import { Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -23,6 +26,7 @@ const App: React.FC = () => {
   // Data State
   const [modules, setModules] = useState<Module[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [subtopics, setSubtopics] = useState<Subtopic[]>([]); // New State
   const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
   
   // UI State
@@ -51,7 +55,6 @@ const App: React.FC = () => {
     // 2. Listen for auth changes (SignIn, SignOut, Token Refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        // This runs on tab focus/token refresh. We must use viewRef to check current state.
         fetchProfileAndSetUser(session.user.id, session.user.email!);
       } else {
         setUser(null);
@@ -70,15 +73,19 @@ const App: React.FC = () => {
        const role = profile?.role === 'admin' ? 'admin' : 'student';
        const name = profile?.full_name || email.split('@')[0];
 
-       const userObj: User = { id: userId, name, email, role };
+       // Updated to include isActive and planId
+       const userObj: User = { 
+           id: userId, 
+           name, 
+           email, 
+           role,
+           isActive: profile?.isActive ?? false,
+           planId: profile?.planId
+       };
        
        setUser(userObj);
 
-       // FIX: Use viewRef.current instead of currentView to avoid stale closure.
-       // Only redirect if we are currently on the LOGIN screen (initial load).
-       // If we are already in DASHBOARD (even as Admin viewing student mode), do NOT redirect.
        if (viewRef.current === ViewState.LOGIN) {
-         // Admins go to Admin Dashboard, Students go to standard Dashboard
          setCurrentView(role === 'admin' ? ViewState.ADMIN_DASHBOARD : ViewState.DASHBOARD);
        }
      } catch (err) {
@@ -91,7 +98,6 @@ const App: React.FC = () => {
   // --- DATA LOADING ---
 
   useEffect(() => {
-    // Only load modules if user is set and we are in the Dashboard view
     if (user && currentView === ViewState.DASHBOARD) {
       loadModules(user.id);
     }
@@ -111,7 +117,6 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await api.auth.signOut();
-    // Auth listener will handle state cleanup
   };
 
   const handleNavigate = (view: ViewState) => {
@@ -126,6 +131,12 @@ const App: React.FC = () => {
   // --- STUDENT ACTIONS ---
 
   const handleSelectModule = async (module: Module) => {
+    // Security check logic handled in UI, but double check here
+    if (user?.role !== 'admin' && !user?.isActive) {
+        setCurrentView(ViewState.SUBSCRIPTION);
+        return;
+    }
+
     setSelectedModule(module);
     setCurrentView(ViewState.MODULE_TOPICS);
     
@@ -142,17 +153,37 @@ const App: React.FC = () => {
 
   const handleSelectTopic = async (topic: Topic) => {
     setSelectedTopic(topic);
-    setCurrentView(ViewState.QUIZ);
     
+    // Updated Flow: Go to Subtopics first, not Quiz immediately
     setIsLoading(true);
     try {
-      const fetchedQuestions = await api.getQuestionsByTopic(topic.id);
-      setActiveQuestions(fetchedQuestions);
+      const fetchedSubtopics = await api.getSubtopicsByTopic(topic.id);
+      setSubtopics(fetchedSubtopics);
+      setCurrentView(ViewState.TOPIC_SUBTOPICS);
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleStartSubtopicQuiz = async (selectedSubtopicIds: string[]) => {
+      setIsLoading(true);
+      try {
+          const questions = await api.getQuestionsBySubtopics(selectedSubtopicIds);
+          if (questions.length === 0) {
+              alert("No hay preguntas en los subtemas seleccionados.");
+              setIsLoading(false);
+              return;
+          }
+          setActiveQuestions(questions);
+          setCurrentView(ViewState.QUIZ);
+      } catch (e) {
+          console.error(e);
+          alert("Error iniciando el quiz.");
+      } finally {
+          setIsLoading(false);
+      }
   };
 
   const handleStartCustomSession = async (moduleIds: string[], isRandom: boolean) => {
@@ -193,25 +224,23 @@ const App: React.FC = () => {
       total: number, 
       answers: { questionId: string; selectedIndex: number; isCorrect: boolean }[]
   ) => {
-    if (!user || !selectedModule) return;
-
-    const percentage = Math.round((score / total) * 100);
-
-    // 1. Optimistic UI update (update local state immediately)
-    const updatedModules = modules.map(m => 
-      m.id === selectedModule.id 
-      ? { ...m, progress: Math.max(m.progress, percentage) } 
-      : m
-    );
-    setModules(updatedModules);
+    if (!user) return;
 
     try {
-      // 2. Save Progress to DB
-      await api.updateProgress(user.id, selectedModule.id, percentage);
-      
-      // 3. Save Detailed Answers (New)
+      // 1. Save detailed answers
       await api.saveUserAnswers(user.id, answers);
-      
+
+      // 2. Recalculate progress for the affected module(s)
+      if (selectedModule) {
+          const newPercentage = await api.recalculateModuleProgress(user.id, selectedModule.id);
+          
+          // Update local state immediately for UI feedback
+          setModules(prev => prev.map(m => 
+              m.id === selectedModule.id 
+              ? { ...m, progress: newPercentage } 
+              : m
+          ));
+      } 
     } catch (error) {
       console.error("Error saving progress:", error);
     }
@@ -250,8 +279,6 @@ const App: React.FC = () => {
     return <Login />;
   }
 
-  // Determine if we should show Admin Layout
-  // Condition: User MUST be admin AND Current View MUST be an ADMIN_* view
   const isAdminView = currentView.toString().startsWith('ADMIN_');
   const showAdminLayout = user.role === 'admin' && isAdminView;
 
@@ -294,11 +321,9 @@ const App: React.FC = () => {
             onDeleteModule={handleDeleteModule}
           />
         )}
-
-        {/* New Components */}
         {currentView === ViewState.ADMIN_USERS && <AdminUsers />}
         {currentView === ViewState.ADMIN_PLANS && <AdminPlans />}
-        
+        {currentView === ViewState.ADMIN_PAYMENTS && <AdminPayments />}
         {(currentView === ViewState.ADMIN_COMMENTS) && (
            <div className="p-10 text-center text-gray-500 bg-white rounded-lg border border-dashed">
               Sección en desarrollo
@@ -309,9 +334,6 @@ const App: React.FC = () => {
   }
 
   // Student View (Standard Layout)
-  // This is rendered for:
-  // 1. Regular students
-  // 2. Admins who have navigated to the Dashboard (Student View)
   return (
     <Layout 
       user={user} 
@@ -328,7 +350,15 @@ const App: React.FC = () => {
           onSelectModule={handleSelectModule} 
           onViewReports={() => handleNavigate(ViewState.PERFORMANCE)}
           onStartCustomSession={handleStartCustomSession}
+          onOpenSubscription={() => setCurrentView(ViewState.SUBSCRIPTION)}
         />
+      )}
+
+      {currentView === ViewState.SUBSCRIPTION && (
+          <SubscriptionPlans 
+             user={user} 
+             onBack={() => setCurrentView(ViewState.DASHBOARD)} 
+          />
       )}
 
       {currentView === ViewState.MODULE_TOPICS && selectedModule && (
@@ -340,18 +370,27 @@ const App: React.FC = () => {
         />
       )}
 
+      {currentView === ViewState.TOPIC_SUBTOPICS && selectedTopic && (
+          <SubtopicList 
+            topic={selectedTopic}
+            subtopics={subtopics}
+            onBack={() => setCurrentView(ViewState.MODULE_TOPICS)}
+            onStart={handleStartSubtopicQuiz}
+          />
+      )}
+
       {currentView === ViewState.QUIZ && selectedTopic && (
         <QuizView 
           topic={selectedTopic}
           questions={activeQuestions}
           onBack={() => {
-             // Reload modules when exiting quiz to ensure dashboard is fresh
+             // If coming back from a quiz, we reload modules to reflect new progress
              if (user) loadModules(user.id);
 
              if (selectedTopic.id === 'custom_session') {
                 handleNavigate(ViewState.DASHBOARD);
              } else {
-                setCurrentView(ViewState.MODULE_TOPICS);
+                setCurrentView(ViewState.TOPIC_SUBTOPICS);
              }
           }}
           onComplete={handleQuizCompletion}

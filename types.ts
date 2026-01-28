@@ -3,14 +3,17 @@ export enum ViewState {
   LOGIN = 'LOGIN',
   DASHBOARD = 'DASHBOARD',
   MODULE_TOPICS = 'MODULE_TOPICS',
+  TOPIC_SUBTOPICS = 'TOPIC_SUBTOPICS',
   QUIZ = 'QUIZ',
   PERFORMANCE = 'PERFORMANCE',
+  SUBSCRIPTION = 'SUBSCRIPTION',
   // Admin Views
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
   ADMIN_QUESTIONS = 'ADMIN_QUESTIONS',
   ADMIN_USERS = 'ADMIN_USERS',
   ADMIN_COMMENTS = 'ADMIN_COMMENTS',
-  ADMIN_PLANS = 'ADMIN_PLANS'
+  ADMIN_PLANS = 'ADMIN_PLANS',
+  ADMIN_PAYMENTS = 'ADMIN_PAYMENTS' // New View
 }
 
 export interface User {
@@ -20,6 +23,8 @@ export interface User {
   role: 'student' | 'admin';
   affiliation?: string; // University/Faculty
   createdAt?: string;
+  isActive?: boolean; 
+  planId?: number;    
 }
 
 export interface Module {
@@ -37,6 +42,13 @@ export interface Topic {
   code: string; // e.g., T7, T8
   name: string;
   isLocked: boolean;
+}
+
+export interface Subtopic {
+  id: string;
+  topicId: string;
+  name: string;
+  questionCount?: number; // Optional count for UI
 }
 
 export interface Question {
@@ -65,6 +77,25 @@ export interface Plan {
   description: string; // mapped from descripcion
   type: string;    // mapped from tipo_plan
   createdAt?: string;
+}
+
+export interface PaymentRequest {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  planId: string;
+  planName?: string;
+  proofUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export interface BankDetails {
+  bankName: string;
+  accountName: string;
+  ruc: string;
+  accountNumber: string;
 }
 
 export interface UserStats {

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { MOCK_MODULES, MOCK_TOPICS, MOCK_QUESTIONS } from '../constants';
-import { Module, Topic, Question, Plan, UserStats } from '../types';
+import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails } from '../types';
 
 // ==========================================
 // CONFIGURATION
@@ -60,7 +60,7 @@ export const api = {
     },
 
     getUserProfile: async (userId: string) => {
-      if (!USE_DATABASE) return { role: 'student', full_name: 'Test User' };
+      if (!USE_DATABASE) return { role: 'student', full_name: 'Test User', isActive: true };
       
       const { data, error } = await supabase
         .from('profiles')
@@ -72,7 +72,11 @@ export const api = {
         // Fallback if profile doesn't exist yet (race condition)
         return null;
       }
-      return data;
+      return {
+          ...data,
+          isActive: data.is_active, // Map from DB column
+          planId: data.plan_id
+      };
     }
   },
 
@@ -83,17 +87,146 @@ export const api = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, Plans(nombre)') // Join with plans to get name if needed
       .order('created_at', { ascending: false });
 
     if (error) {
         console.error("Error fetching users:", error);
         throw error;
     }
-    return data;
+    
+    return data.map((u: any) => ({
+        ...u,
+        isActive: u.is_active,
+        planId: u.plan_id,
+        planName: u.Plans?.nombre
+    }));
   },
 
-  // --- ADMIN: PLANS ---
+  updateUserStatus: async (userId: string, isActive: boolean) => {
+      if (!USE_DATABASE) return;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: isActive })
+        .eq('id', userId);
+      
+      if (error) throw error;
+  },
+
+  // --- PAYMENTS & PLANS ---
+
+  getBankDetails: async (): Promise<BankDetails> => {
+      if (!USE_DATABASE) return { bankName: 'Itaú Mock', accountName: 'Anato Mock', ruc: '000', accountNumber: '0000' };
+
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'bank_details')
+        .single();
+      
+      if (error || !data) {
+          // Return defaults if not found
+          return { bankName: 'Itaú Paraguay', accountName: 'AnatoPlus S.A.', ruc: '80012345-6', accountNumber: '7200123456' };
+      }
+
+      return data.value as BankDetails;
+  },
+
+  updateBankDetails: async (details: BankDetails) => {
+      if (!USE_DATABASE) return;
+
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ 
+            key: 'bank_details', 
+            value: details, 
+            updated_at: new Date() 
+        });
+      
+      if (error) throw error;
+  },
+
+  uploadPaymentProof: async (file: File, userId: string): Promise<string> => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(filePath, file);
+
+      if (uploadError) {
+          throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('payment-proofs').getPublicUrl(filePath);
+      return data.publicUrl;
+  },
+
+  submitPaymentRequest: async (userId: string, planId: string, proofUrl: string) => {
+      const { error } = await supabase.from('payment_requests').insert([{
+          user_id: userId,
+          plan_id: parseInt(planId),
+          proof_url: proofUrl,
+          status: 'pending'
+      }]);
+
+      if (error) throw error;
+  },
+
+  getPaymentRequests: async (): Promise<PaymentRequest[]> => {
+      if (!USE_DATABASE) return [];
+
+      const { data, error } = await supabase
+        .from('payment_requests')
+        .select(`
+            *,
+            profiles (full_name, email),
+            Plans (nombre)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map((req: any) => ({
+          id: req.id.toString(),
+          userId: req.user_id,
+          userName: req.profiles?.full_name,
+          userEmail: req.profiles?.email,
+          planId: req.plan_id.toString(),
+          planName: req.Plans?.nombre,
+          proofUrl: req.proof_url,
+          status: req.status,
+          createdAt: req.created_at
+      }));
+  },
+
+  processPayment: async (requestId: string, userId: string, planId: string, status: 'approved' | 'rejected') => {
+      // 1. Update Request Status
+      const { error } = await supabase
+        .from('payment_requests')
+        .update({ status: status, updated_at: new Date() })
+        .eq('id', parseInt(requestId));
+
+      if (error) throw error;
+
+      // 2. If approved, activate user and set plan
+      if (status === 'approved') {
+          await api.updateUserPlan(userId, planId);
+      }
+  },
+
+  updateUserPlan: async (userId: string, planId: string) => {
+      if (!USE_DATABASE) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ plan_id: parseInt(planId), is_active: true }) // Auto activate on purchase
+        .eq('id', userId);
+
+      if (error) throw error;
+  },
 
   getPlans: async (): Promise<Plan[]> => {
     if (!USE_DATABASE) return [];
@@ -101,7 +234,7 @@ export const api = {
     const { data, error } = await supabase
       .from('Plans')
       .select('*')
-      .order('id_Plan', { ascending: true }); // Ordered by id_Plan
+      .order('precio', { ascending: true }); 
 
     if (error) {
         console.error("Error fetching plans:", error);
@@ -120,8 +253,6 @@ export const api = {
   },
 
   createPlan: async (plan: Partial<Plan>) => {
-    // We map frontend keys to DB columns
-    // Note: id_Plan is usually SERIAL/AUTO_INCREMENT, so we don't send it.
     const { error } = await supabase.from('Plans').insert([{
         nombre: plan.name,
         precio: plan.price,
@@ -137,7 +268,6 @@ export const api = {
   },
 
   updatePlan: async (id: string, updates: Partial<Plan>) => {
-    // Map updates to DB columns
     const dbUpdates: any = {};
     if (updates.name) dbUpdates.nombre = updates.name;
     if (updates.price) dbUpdates.precio = updates.price;
@@ -148,7 +278,7 @@ export const api = {
     const { error } = await supabase
         .from('Plans')
         .update(dbUpdates)
-        .eq('id_Plan', parseInt(id)); // DB expects integer
+        .eq('id_Plan', parseInt(id)); 
 
     if (error) {
         console.error("Error updating plan:", error);
@@ -160,7 +290,7 @@ export const api = {
     const { error } = await supabase
         .from('Plans')
         .delete()
-        .eq('id_Plan', parseInt(id)); // DB expects integer
+        .eq('id_Plan', parseInt(id));
 
     if (error) {
         console.error("Error deleting plan:", error);
@@ -186,7 +316,7 @@ export const api = {
     let userProgress: any[] = [];
     if (userId) {
         const { data: progressData } = await supabase
-            .from('Progreso')
+            .from('progreso')
             .select('id_modulo, porcentaje')
             .eq('user_id', userId);
         if (progressData) userProgress = progressData;
@@ -229,7 +359,7 @@ export const api = {
     if (error) throw error;
   },
 
-  // --- TOPICS (TEMAS) ---
+  // --- TOPICS & SUBTOPICS ---
 
   getAllTopics: async (): Promise<Topic[]> => {
      if (!USE_DATABASE) return MOCK_TOPICS;
@@ -286,8 +416,6 @@ export const api = {
       if (error) throw error;
   },
 
-  // --- SUBTOPICS (SUBTEMAS) ---
-
   getAllSubtopics: async () => {
       if (!USE_DATABASE) return [];
       const { data, error } = await supabase.from('Subtemas').select('*, Temas(nombre_tema)').order('id_subtema');
@@ -298,6 +426,27 @@ export const api = {
           name: row.nombre_subtema,
           topicName: row.Temas?.nombre_tema
       }));
+  },
+
+  getSubtopicsByTopic: async (topicId: string): Promise<Subtopic[]> => {
+    if (!USE_DATABASE) return [];
+
+    const { data, error } = await supabase
+      .from('Subtemas')
+      .select('*')
+      .eq('id_tema', topicId)
+      .order('nombre_subtema');
+
+    if (error) {
+      console.error("Error fetching subtopics", error);
+      return [];
+    }
+
+    return data.map((row: any) => ({
+      id: row.id_subtema.toString(),
+      topicId: row.id_tema.toString(),
+      name: row.nombre_subtema
+    }));
   },
 
   createSubtopic: async (subtopic: { topicId: string, name: string }) => {
@@ -339,11 +488,9 @@ export const api = {
         `)
         .order('id_pregunta', { ascending: false });
 
-    // If filtering by subtopic, we want ALL matching questions, not just the last 100
     if (subtopicId) {
         query = query.eq('id_subtema', subtopicId);
     } else {
-        // If no filter, limit to 100 to prevent overloading
         query = query.limit(100);
     }
 
@@ -393,7 +540,6 @@ export const api = {
   },
 
   createQuestion: async (payload: { subtopicId: string, text: string, explanationCorrect: string, explanationIncorrect: string, imageUrl?: string, options: {text: string, isCorrect: boolean}[] }) => {
-      // 1. Insert Question
       const { data: qData, error: qError } = await supabase
         .from('Pregunta')
         .insert([{
@@ -411,7 +557,6 @@ export const api = {
       if (qError) throw qError;
       const questionId = qData.id_pregunta;
 
-      // 2. Insert Options with createdAt (FIXED)
       const optionsPayload = payload.options.map(o => ({
           id_pregunta: questionId,
           texto_opcion: o.text,
@@ -431,35 +576,68 @@ export const api = {
 
   // --- PROGRESS & HISTORY ---
 
-  updateProgress: async (userId: string, moduleId: string, percentage: number): Promise<void> => {
-      if (!USE_DATABASE) return;
-
-      const id_modulo = parseInt(moduleId);
+  recalculateModuleProgress: async (userId: string, moduleId: string): Promise<number> => {
+      if (!USE_DATABASE) return 0;
       
-      const { data: existing, error: fetchError } = await supabase
-        .from('Progreso')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('id_modulo', id_modulo)
-        .single();
+      try {
+        const { data: topics } = await supabase.from('Temas').select('id_tema').eq('id_modulo', moduleId);
+        if(!topics?.length) return 0;
+        const topicIds = topics.map(t => t.id_tema);
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error("Error fetching progress:", fetchError);
-      }
+        const { data: subtopics } = await supabase.from('Subtemas').select('id_subtema').in('id_tema', topicIds);
+        if(!subtopics?.length) return 0;
+        const subtopicIds = subtopics.map(s => s.id_subtema);
 
-      if (existing) {
-          if (percentage > existing.porcentaje) {
-              await supabase
-                .from('Progreso')
-                .update({ porcentaje: percentage, updated_at: new Date() })
-                .eq('id', existing.id);
-          }
-      } else {
-          await supabase
-            .from('Progreso')
-            .insert([
-                { user_id: userId, id_modulo: id_modulo, porcentaje: percentage }
-            ]);
+        const { count: totalQuestions, error: countError } = await supabase
+            .from('Pregunta')
+            .select('id_pregunta', { count: 'exact', head: true })
+            .in('id_subtema', subtopicIds);
+        
+        if (countError || !totalQuestions || totalQuestions === 0) return 0;
+
+        const { data: questions } = await supabase
+            .from('Pregunta')
+            .select('id_pregunta')
+            .in('id_subtema', subtopicIds);
+        
+        if (!questions?.length) return 0;
+        const moduleQuestionIds = questions.map(q => q.id_pregunta);
+
+        const { data: answers } = await supabase
+            .from('user_answers')
+            .select('question_id')
+            .eq('user_id', userId)
+            .eq('is_correct', true)
+            .in('question_id', moduleQuestionIds);
+        
+        const uniqueCorrect = new Set(answers?.map(a => a.question_id)).size;
+        const percentage = Math.min(100, Math.round((uniqueCorrect / totalQuestions) * 100));
+
+        const { data: existing } = await supabase
+            .from('progreso')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('id_modulo', moduleId)
+            .single();
+
+        if (existing) {
+            await supabase.from('progreso').update({
+                porcentaje: percentage,
+                updated_at: new Date()
+            }).eq('id', existing.id);
+        } else {
+            await supabase.from('progreso').insert({
+                user_id: userId,
+                id_modulo: parseInt(moduleId),
+                porcentaje: percentage,
+                updated_at: new Date()
+            });
+        }
+
+        return percentage;
+      } catch (error) {
+          console.error("Error recalculating progress:", error);
+          return 0;
       }
   },
 
@@ -485,24 +663,19 @@ export const api = {
       }
   },
 
-  // --- PERFORMANCE STATS ---
-
   getUserStats: async (userId: string): Promise<UserStats> => {
       if (!USE_DATABASE) return { totalQuestions: 0, correctQuestions: 0, accuracy: 0, streakDays: 0 };
       
-      // 1. Get total questions answered
       const { count: total, error: tError } = await supabase
           .from('user_answers')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', userId);
 
       if (tError) {
-          console.error("Error fetching total stats", tError);
           return { totalQuestions: 0, correctQuestions: 0, accuracy: 0, streakDays: 0 };
       }
 
-      // 2. Get total correct answers
-      const { count: correct, error: cError } = await supabase
+      const { count: correct } = await supabase
         .from('user_answers')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
@@ -520,24 +693,8 @@ export const api = {
       };
   },
 
-  getQuestionsByTopic: async (topicId: string): Promise<Question[]> => {
-    if (!USE_DATABASE) {
-      return new Promise(resolve => {
-        const questions = MOCK_QUESTIONS[topicId] || [];
-        setTimeout(() => resolve(questions), 400);
-      });
-    }
-
-    const { data: subtemas, error: subError } = await supabase
-        .from('Subtemas')
-        .select('id_subtema')
-        .eq('id_tema', topicId);
-
-    if (subError || !subtemas || subtemas.length === 0) {
-        return [];
-    }
-
-    const subtemaIds = subtemas.map(s => s.id_subtema);
+  getQuestionsBySubtopics: async (subtopicIds: string[]): Promise<Question[]> => {
+    if (!USE_DATABASE || subtopicIds.length === 0) return [];
 
     const { data: questionsData, error: qError } = await supabase
       .from('Pregunta')
@@ -548,15 +705,17 @@ export const api = {
         explicacion_incorrecta,
         imagen_video,
         id_subtema,
+        Subtemas ( id_tema ),
         Opcions (
             id_opcion,
             texto_opcion,
             es_correcta
         )
       `)
-      .in('id_subtema', subtemaIds);
+      .in('id_subtema', subtopicIds);
 
     if (qError) {
+      console.error(qError);
       return [];
     }
 
@@ -568,7 +727,7 @@ export const api = {
 
         return {
             id: q.id_pregunta.toString(),
-            topicId: topicId, 
+            topicId: q.Subtemas?.id_tema?.toString() || 'unknown', 
             text: q.texto_pregunta,
             options: optionsText,
             correctAnswerIndex: correctIndex === -1 ? 0 : correctIndex, 
@@ -580,24 +739,13 @@ export const api = {
   },
 
   getQuestionsFromModules: async (moduleIds: string[], limit = 20): Promise<Question[]> => {
-    if (!USE_DATABASE) {
-        // Mock fallback not relevant for this fix
-        return [];
-    }
+    if (!USE_DATABASE) return [];
 
-    const { data: temas } = await supabase
-        .from('Temas')
-        .select('id_tema')
-        .in('id_modulo', moduleIds);
-        
+    const { data: temas } = await supabase.from('Temas').select('id_tema').in('id_modulo', moduleIds);
     if (!temas) return [];
     const temaIds = temas.map(t => t.id_tema);
 
-    const { data: subtemas } = await supabase
-        .from('Subtemas')
-        .select('id_subtema')
-        .in('id_tema', temaIds);
-
+    const { data: subtemas } = await supabase.from('Subtemas').select('id_subtema').in('id_tema', temaIds);
     if (!subtemas) return [];
     const subtemaIds = subtemas.map(s => s.id_subtema);
 
@@ -609,18 +757,14 @@ export const api = {
         explicacion_correcta,
         explicacion_incorrecta,
         imagen_video,
-        Opcions (
-            id_opcion,
-            texto_opcion,
-            es_correcta
-        )
+        Opcions (id_opcion, texto_opcion, es_correcta)
       `)
       .in('id_subtema', subtemaIds)
       .limit(50); 
 
     if (!questionsData) return [];
 
-    const mapped = questionsData.map((q: any) => {
+    return questionsData.map((q: any) => {
         const rawOptions = q.Opcions || [];
         const sortedOptions = rawOptions.sort((a: any, b: any) => a.id_opcion - b.id_opcion);
         const correctIndex = sortedOptions.findIndex((o: any) => o.es_correcta);
@@ -636,7 +780,5 @@ export const api = {
             imageUrl: q.imagen_video
         };
     });
-
-    return mapped;
   }
 };

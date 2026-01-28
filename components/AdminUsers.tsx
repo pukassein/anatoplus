@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Search, Loader2, User, Building2, Calendar, AlertTriangle } from 'lucide-react';
+import { Search, Loader2, User, Building2, Calendar, AlertTriangle, ToggleLeft, ToggleRight, Check, X } from 'lucide-react';
 
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -16,7 +16,7 @@ const AdminUsers: React.FC = () => {
       setUsers(data || []);
     } catch (err: any) {
       console.error("Failed to fetch users", err);
-      setError("No se pudieron cargar los usuarios. Verifica que la tabla 'profiles' exista y tenga permisos (RLS) configurados.");
+      setError("No se pudieron cargar los usuarios. Verifica que la tabla 'profiles' tenga las columnas 'is_active' y 'plan_id'.");
     } finally {
       setIsLoading(false);
     }
@@ -25,6 +25,16 @@ const AdminUsers: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+      try {
+          await api.updateUserStatus(userId, !currentStatus);
+          // Optimistic update
+          setUsers(users.map(u => u.id === userId ? { ...u, isActive: !currentStatus } : u));
+      } catch (err) {
+          alert("Error al actualizar estado del usuario.");
+      }
+  };
 
   const filteredUsers = users.filter(user => 
     (user.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,9 +82,10 @@ const AdminUsers: React.FC = () => {
                 <thead className="bg-gray-50">
                     <tr>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Usuario</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Universidad / Afiliación</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Plan / Afiliación</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Rol</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fecha Registro</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acción</th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -83,39 +94,65 @@ const AdminUsers: React.FC = () => {
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
-                                    <div className="flex-shrink-0 h-10 w-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold border border-amber-200">
+                                    <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold border ${user.isActive ? 'bg-amber-100 text-amber-600 border-amber-200' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
                                         <User size={20} />
                                     </div>
                                     <div className="ml-4">
-                                        <div className="text-sm font-medium text-gray-900">{user.full_name || 'Sin nombre'}</div>
+                                        <div className={`text-sm font-medium ${user.isActive ? 'text-gray-900' : 'text-gray-400'}`}>{user.full_name || 'Sin nombre'}</div>
                                         <div className="text-sm text-gray-500">{user.email || 'Email privado'}</div>
                                     </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center text-sm text-gray-600">
-                                    <Building2 size={16} className="mr-2 text-gray-400" />
-                                    {user.affiliation || 'No especificado'}
+                                <div className="flex flex-col">
+                                   <div className="flex items-center text-sm font-semibold text-gray-700">
+                                      {user.planName || 'Gratuito'}
+                                   </div>
+                                   <div className="flex items-center text-xs text-gray-500 mt-1">
+                                      <Building2 size={12} className="mr-1 text-gray-400" />
+                                      {user.affiliation || 'No especificado'}
+                                   </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                                    user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
                                 }`}>
                                     {user.role === 'admin' ? 'Administrador' : 'Estudiante'}
                                 </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div className="flex items-center">
-                                    <Calendar size={16} className="mr-2 text-gray-400" />
-                                    {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
-                                </div>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                {user.isActive ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <Check size={12} /> Activo
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <X size={12} /> Inactivo
+                                    </span>
+                                )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button
+                                   onClick={() => handleToggleStatus(user.id, user.isActive)}
+                                   className={`flex items-center gap-2 ml-auto px-3 py-1 rounded-md transition-colors ${
+                                       user.isActive 
+                                       ? 'text-red-600 hover:bg-red-50' 
+                                       : 'text-green-600 hover:bg-green-50'
+                                   }`}
+                                >
+                                   {user.isActive ? (
+                                       <>Desactivar <ToggleRight size={24} /></>
+                                   ) : (
+                                       <>Activar <ToggleLeft size={24} /></>
+                                   )}
+                                </button>
                             </td>
                         </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
+                            <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                                 {error ? 'Error de carga.' : 'No se encontraron usuarios.'}
                             </td>
                         </tr>

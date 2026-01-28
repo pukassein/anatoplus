@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Module } from '../types';
-import { PlayCircle, Award, TrendingUp, Settings, Zap, Shuffle, CheckCircle2, X } from 'lucide-react';
+import { Module, User } from '../types';
+import { PlayCircle, Award, TrendingUp, Settings, Zap, Shuffle, CheckCircle2, X, Lock, Crown } from 'lucide-react';
 import { 
   ResponsiveContainer, 
   RadarChart, 
@@ -12,11 +12,12 @@ import {
 } from 'recharts';
 
 interface DashboardProps {
-  user: { name: string };
+  user: User;
   modules: Module[];
   onSelectModule: (module: Module) => void;
   onViewReports: () => void;
   onStartCustomSession: (moduleIds: string[], isRandom: boolean) => void;
+  onOpenSubscription: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -24,7 +25,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   modules, 
   onSelectModule, 
   onViewReports,
-  onStartCustomSession
+  onStartCustomSession,
+  onOpenSubscription
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
@@ -72,8 +74,33 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  const isLocked = !user.isActive && user.role !== 'admin';
+
   return (
     <div className="space-y-8 animate-fade-in relative">
+      
+      {/* Inactive Banner */}
+      {isLocked && (
+          <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 animate-scale-up">
+              <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                      <Lock size={32} />
+                  </div>
+                  <div>
+                      <h2 className="text-xl font-bold">Acceso Limitado</h2>
+                      <p className="text-red-100">Tu cuenta está en modo gratuito. Para acceder a todo el contenido, necesitas activar un plan.</p>
+                  </div>
+              </div>
+              <button 
+                onClick={onOpenSubscription}
+                className="whitespace-nowrap bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-red-50 transition-colors shadow-sm flex items-center gap-2"
+              >
+                  <Crown size={20} />
+                  Obtener Acceso Total
+              </button>
+          </div>
+      )}
+
       {/* Hero Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
         <div className="relative z-10 max-w-xl">
@@ -86,7 +113,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex flex-wrap gap-4">
              <button 
                onClick={() => setIsModalOpen(true)}
-               className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-lg font-bold transition-all shadow-md active:scale-95 flex items-center gap-2"
+               disabled={isLocked}
+               className={`px-6 py-2.5 rounded-lg font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 ${
+                   isLocked 
+                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                   : 'bg-amber-500 hover:bg-amber-600 text-white'
+               }`}
              >
                 <Zap size={20} />
                 Continuar Estudio
@@ -169,18 +201,37 @@ const Dashboard: React.FC<DashboardProps> = ({
           {modules.map((module) => (
             <div 
               key={module.id}
-              onClick={() => onSelectModule(module)}
-              className="bg-white group rounded-xl shadow-sm hover:shadow-xl border border-gray-200 hover:border-amber-300 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
+              onClick={() => {
+                  if (isLocked) {
+                      onOpenSubscription();
+                  } else {
+                      onSelectModule(module);
+                  }
+              }}
+              className={`bg-white group rounded-xl shadow-sm border transition-all duration-300 overflow-hidden flex flex-col h-full ${
+                  isLocked 
+                  ? 'border-gray-200 cursor-not-allowed opacity-75' 
+                  : 'border-gray-200 hover:shadow-xl hover:border-amber-300 cursor-pointer'
+              }`}
             >
               <div className="h-40 overflow-hidden relative">
                 <img 
                   src={module.imageUrl} 
                   alt={module.title}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  className={`w-full h-full object-cover transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                   <span className="text-white font-medium text-sm">Ver temas &rarr;</span>
-                </div>
+                
+                {isLocked && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Lock className="text-white" size={32} />
+                    </div>
+                )}
+
+                {!isLocked && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <span className="text-white font-medium text-sm">Ver temas &rarr;</span>
+                    </div>
+                )}
               </div>
               
               <div className="p-5 flex-1 flex flex-col">
