@@ -77,44 +77,44 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isLocked = !user.isActive && user.role !== 'admin';
 
   return (
-    <div className="space-y-8 animate-fade-in relative">
+    <div className="space-y-6 md:space-y-8 animate-fade-in relative">
       
       {/* Inactive Banner */}
       {isLocked && (
-          <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 animate-scale-up">
+          <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-4 md:p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 animate-scale-up">
               <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                      <Lock size={32} />
+                  <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm shrink-0">
+                      <Lock size={24} md:size={32} />
                   </div>
                   <div>
-                      <h2 className="text-xl font-bold">Acceso Limitado</h2>
-                      <p className="text-red-100">Tu cuenta está en modo gratuito. Para acceder a todo el contenido, necesitas activar un plan.</p>
+                      <h2 className="text-lg md:text-xl font-bold">Acceso Limitado</h2>
+                      <p className="text-red-100 text-sm md:text-base">Tu cuenta está en modo gratuito. Activa un plan para acceder a todo.</p>
                   </div>
               </div>
               <button 
                 onClick={onOpenSubscription}
-                className="whitespace-nowrap bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-red-50 transition-colors shadow-sm flex items-center gap-2"
+                className="w-full md:w-auto whitespace-nowrap bg-white text-red-600 px-6 py-2 md:py-3 rounded-lg font-bold hover:bg-red-50 transition-colors shadow-sm flex items-center justify-center gap-2"
               >
                   <Crown size={20} />
-                  Obtener Acceso Total
+                  Obtener Acceso
               </button>
           </div>
       )}
 
       {/* Hero Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
-        <div className="relative z-10 max-w-xl">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            ¡Hola, <span className="text-amber-600">{user.name}</span>!
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
+        <div className="relative z-10 max-w-xl w-full">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-4">
+            ¡Hola, <span className="text-amber-600">{user.name.split(' ')[0]}</span>!
           </h1>
-          <p className="text-gray-600 text-lg mb-6">
-            Gestiona tus preguntas, sigue tu progreso y compara tus resultados en tiempo real. ¡Escoge un tema y empieza a mejorar ya!
+          <p className="text-gray-600 text-sm md:text-lg mb-6 leading-relaxed">
+            Gestiona tus preguntas y sigue tu progreso en tiempo real.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
              <button 
                onClick={() => setIsModalOpen(true)}
                disabled={isLocked}
-               className={`px-6 py-2.5 rounded-lg font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 ${
+               className={`px-6 py-3 rounded-lg font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 ${
                    isLocked 
                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                    : 'bg-amber-500 hover:bg-amber-600 text-white'
@@ -125,15 +125,15 @@ const Dashboard: React.FC<DashboardProps> = ({
              </button>
              <button 
                onClick={onViewReports}
-               className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg font-medium transition-colors active:scale-95"
+               className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-medium transition-colors active:scale-95 flex items-center justify-center"
              >
                 Ver Reportes
              </button>
           </div>
         </div>
         
-        {/* Radar Chart Visualization */}
-        <div className="hidden md:flex flex-col items-center justify-center relative z-10 h-72 w-96 -mr-8">
+        {/* Radar Chart Visualization (Hidden on small screens to save space) */}
+        <div className="hidden lg:flex flex-col items-center justify-center relative z-10 h-72 w-96 -mr-8">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
               <PolarGrid stroke="#fef3c7" /> {/* amber-100 */}
@@ -163,41 +163,44 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="absolute right-0 top-0 w-1/3 h-full bg-amber-50 skew-x-12 opacity-50 z-0 pointer-events-none"></div>
       </div>
 
-      {/* Stats Overview Mini */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-             <PlayCircle size={24} />
+      {/* Stats Overview Mini - Grid for Mobile */}
+      <div className="grid grid-cols-3 gap-3 md:gap-6">
+        <div className="bg-white p-3 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-2 md:gap-4">
+           <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-lg shrink-0">
+             <PlayCircle size={20} className="md:w-6 md:h-6" />
            </div>
            <div>
-             <p className="text-sm text-gray-500">Módulos Activos</p>
-             <p className="text-xl font-bold text-gray-900">{activeModulesCount}/{modules.length}</p>
+             <p className="text-xs text-gray-500 hidden md:block">Módulos</p>
+             <p className="text-sm md:text-xl font-bold text-gray-900">{activeModulesCount}/{modules.length}</p>
+             <p className="text-[10px] text-gray-500 md:hidden">Módulos</p>
            </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-green-100 text-green-600 rounded-lg">
-             <Award size={24} />
+        <div className="bg-white p-3 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-2 md:gap-4">
+           <div className="p-2 md:p-3 bg-green-100 text-green-600 rounded-lg shrink-0">
+             <Award size={20} className="md:w-6 md:h-6" />
            </div>
            <div>
-             <p className="text-sm text-gray-500">Puntaje Promedio</p>
-             <p className="text-xl font-bold text-gray-900">{averageScore}%</p>
+             <p className="text-xs text-gray-500 hidden md:block">Promedio</p>
+             <p className="text-sm md:text-xl font-bold text-gray-900">{averageScore}%</p>
+             <p className="text-[10px] text-gray-500 md:hidden">Puntaje</p>
            </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-             <TrendingUp size={24} />
+        <div className="bg-white p-3 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-2 md:gap-4">
+           <div className="p-2 md:p-3 bg-purple-100 text-purple-600 rounded-lg shrink-0">
+             <TrendingUp size={20} className="md:w-6 md:h-6" />
            </div>
            <div>
-             <p className="text-sm text-gray-500">Completado Total</p>
-             <p className="text-xl font-bold text-gray-900">{globalCompletion}%</p>
+             <p className="text-xs text-gray-500 hidden md:block">Total</p>
+             <p className="text-sm md:text-xl font-bold text-gray-900">{globalCompletion}%</p>
+             <p className="text-[10px] text-gray-500 md:hidden">Avance</p>
            </div>
         </div>
       </div>
 
       {/* Modules Grid */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Explorar Módulos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Explorar Módulos</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {modules.map((module) => (
             <div 
               key={module.id}
@@ -208,13 +211,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onSelectModule(module);
                   }
               }}
-              className={`bg-white group rounded-xl shadow-sm border transition-all duration-300 overflow-hidden flex flex-col h-full ${
+              className={`bg-white group rounded-xl shadow-sm border transition-all duration-300 overflow-hidden flex flex-row sm:flex-col h-auto sm:h-full ${
                   isLocked 
                   ? 'border-gray-200 cursor-not-allowed opacity-75' 
                   : 'border-gray-200 hover:shadow-xl hover:border-amber-300 cursor-pointer'
               }`}
             >
-              <div className="h-40 overflow-hidden relative">
+              {/* Image Container: Small square on mobile, Full width on desktop */}
+              <div className="w-24 h-24 sm:w-full sm:h-40 overflow-hidden relative shrink-0">
                 <img 
                   src={module.imageUrl} 
                   alt={module.title}
@@ -223,33 +227,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
                 {isLocked && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <Lock className="text-white" size={32} />
-                    </div>
-                )}
-
-                {!isLocked && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <span className="text-white font-medium text-sm">Ver temas &rarr;</span>
+                        <Lock className="text-white w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                 )}
               </div>
               
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">
+              {/* Content Container */}
+              <div className="p-3 sm:p-5 flex-1 flex flex-col justify-center sm:justify-start min-w-0">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 group-hover:text-amber-600 transition-colors truncate">
                   {module.title}
                 </h3>
-                <p className="text-sm text-gray-500 mb-4 flex-1 line-clamp-2">
+                
+                {/* Description: Hidden on mobile to keep card compact */}
+                <p className="text-sm text-gray-500 mb-4 flex-1 line-clamp-2 hidden sm:block">
                   {module.description}
                 </p>
                 
-                <div className="space-y-2">
+                <div className="space-y-1 sm:space-y-2 mt-auto">
                   <div className="flex justify-between text-xs font-medium text-gray-500">
                     <span>Progreso</span>
                     <span>{module.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 sm:h-2 overflow-hidden">
                     <div 
-                      className="bg-amber-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                      className="bg-amber-500 h-full rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${module.progress}%` }}
                     />
                   </div>
@@ -270,9 +271,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div>
                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                    <Settings className="text-amber-600" size={24} />
-                   Configurar Sesión de Estudio
+                   Configurar Sesión
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">Personaliza tu práctica para hoy</p>
+                <p className="text-sm text-gray-500 mt-1">Personaliza tu práctica</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -289,7 +290,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="mb-8">
                  <div className="flex justify-between items-end mb-4">
                     <label className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      1. Selecciona los Módulos
+                      1. Selecciona Módulos
                     </label>
                     <button 
                       onClick={selectAll}
@@ -345,7 +346,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        </div>
                        <div>
                           <p className="font-bold text-gray-900">Orden Estándar</p>
-                          <p className="text-xs text-gray-500">Preguntas agrupadas por tema.</p>
+                          <p className="text-xs text-gray-500">Agrupadas por tema.</p>
                        </div>
                     </div>
 
@@ -362,7 +363,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        </div>
                        <div>
                           <p className="font-bold text-gray-900">Aleatorio (Quiz)</p>
-                          <p className="text-xs text-gray-500">Preguntas mezcladas al azar.</p>
+                          <p className="text-xs text-gray-500">Mezcladas al azar.</p>
                        </div>
                     </div>
                  </div>
@@ -388,7 +389,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }`}
               >
                 <Zap size={18} />
-                Comenzar Estudio
+                Comenzar
               </button>
             </div>
 

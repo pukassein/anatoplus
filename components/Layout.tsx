@@ -28,14 +28,16 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
         onNavigate(view);
         setIsMobileMenuOpen(false);
       }}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+      className={`flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg transition-colors duration-200 ${
         currentView === view || (currentView === ViewState.QUIZ && view === ViewState.DASHBOARD) || (currentView === ViewState.MODULE_TOPICS && view === ViewState.DASHBOARD)
           ? 'bg-amber-100 text-amber-700 font-medium'
           : 'text-gray-600 hover:bg-gray-100'
       }`}
+      title={label} // Tooltip for tablet users seeing only icons
     >
-      <Icon size={20} />
-      <span>{label}</span>
+      <Icon size={20} className="shrink-0" />
+      {/* Hidden on tablet (md), Visible on Laptop (lg) */}
+      <span className="hidden lg:inline">{label}</span>
     </button>
   );
 
@@ -45,55 +47,60 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center cursor-pointer" onClick={() => onNavigate(ViewState.DASHBOARD)}>
+            <div className="flex items-center cursor-pointer gap-2" onClick={() => onNavigate(ViewState.DASHBOARD)}>
               {/* Logo / Brand */}
               <div className="flex-shrink-0 flex items-center">
                  <img 
                    src="/logo-main-1.png" 
                    alt="AnatoPlus" 
-                   className="h-10 w-auto" 
+                   className="h-8 md:h-10 w-auto" 
                  />
               </div>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-4">
+            {/* Desktop/Tablet Navigation */}
+            <nav className="hidden md:flex items-center space-x-1 lg:space-x-4">
               <NavItem view={ViewState.DASHBOARD} label="Módulos" icon={BookOpen} />
               <NavItem view={ViewState.PERFORMANCE} label="Desempeño" icon={BarChart2} />
               
               <button 
                   onClick={() => onNavigate(ViewState.SUBSCRIPTION)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+                  className={`flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg transition-colors duration-200 ${
                       user.isActive 
                       ? 'text-gray-400 hover:text-amber-500' 
                       : 'bg-amber-100 text-amber-700 font-bold border border-amber-200 animate-pulse'
                   }`}
+                  title="Planes Premium"
               >
-                  <Crown size={20} />
-                  <span>{user.isActive ? 'Mi Plan' : 'Ser Premium'}</span>
+                  <Crown size={20} className="shrink-0" />
+                  <span className="hidden lg:inline">{user.isActive ? 'Mi Plan' : 'Ser Premium'}</span>
               </button>
 
               {/* ADMIN BUTTON */}
               {user.role === 'admin' && (
                 <button
                   onClick={() => onNavigate(ViewState.ADMIN_DASHBOARD)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+                  className="flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+                  title="Panel Admin"
                 >
-                  <ShieldCheck size={20} />
-                  <span>Panel Admin</span>
+                  <ShieldCheck size={20} className="shrink-0" />
+                  <span className="hidden lg:inline">Panel Admin</span>
                 </button>
               )}
               
               <div className="h-6 w-px bg-gray-200 mx-2" />
               
               <div className="flex items-center space-x-3 ml-2">
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-medium text-gray-900">{user.name}</span>
-                  <span className="text-xs text-gray-500 capitalize">{user.role === 'admin' ? 'Administrador' : 'Estudiante'}</span>
+                {/* Hide Name/Role on Tablet, Show on Laptop */}
+                <div className="hidden lg:flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">{user.name}</span>
+                  <span className="text-xs text-gray-500 capitalize">{user.role === 'admin' ? 'Admin' : 'Estudiante'}</span>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200">
+                
+                <div className="h-8 w-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200 shrink-0">
                   <UserIcon size={16} />
                 </div>
+                
                 <button 
                   onClick={onLogout}
                   className="p-2 text-gray-400 hover:text-red-500 transition-colors"
@@ -118,17 +125,25 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <NavItem view={ViewState.DASHBOARD} label="Módulos" icon={BookOpen} />
-              <NavItem view={ViewState.PERFORMANCE} label="Desempeño" icon={BarChart2} />
+          <div className="md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full z-40">
+            <div className="px-4 pt-4 pb-2 border-b border-gray-100 mb-2">
+                <p className="text-sm font-bold text-gray-800">{user.name}</p>
+                <p className="text-xs text-gray-500 capitalize">{user.role === 'admin' ? 'Administrador' : 'Estudiante'}</p>
+            </div>
+            <div className="px-2 pb-3 space-y-1 sm:px-3">
+              <button onClick={() => { onNavigate(ViewState.DASHBOARD); setIsMobileMenuOpen(false); }} className="flex w-full items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium">
+                  <BookOpen size={20} /> <span>Módulos</span>
+              </button>
+              <button onClick={() => { onNavigate(ViewState.PERFORMANCE); setIsMobileMenuOpen(false); }} className="flex w-full items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 font-medium">
+                  <BarChart2 size={20} /> <span>Desempeño</span>
+              </button>
               
               <button
                 onClick={() => {
                     onNavigate(ViewState.SUBSCRIPTION);
                     setIsMobileMenuOpen(false);
                 }}
-                className="flex w-full items-center space-x-2 px-4 py-2 rounded-lg text-amber-600 font-bold hover:bg-amber-50"
+                className="flex w-full items-center space-x-3 px-4 py-3 rounded-lg text-amber-600 font-bold hover:bg-amber-50"
               >
                 <Crown size={20} />
                 <span>Planes Premium</span>
@@ -140,31 +155,33 @@ const Layout: React.FC<LayoutProps> = ({ children, user, currentView, onNavigate
                         onNavigate(ViewState.ADMIN_DASHBOARD);
                         setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center space-x-2 px-4 py-2 rounded-lg text-gray-800 font-bold hover:bg-gray-100"
+                    className="flex w-full items-center space-x-3 px-4 py-3 rounded-lg text-gray-800 font-bold hover:bg-gray-100"
                   >
                     <ShieldCheck size={20} />
-                    <span>Ir a Panel Admin</span>
+                    <span>Panel Admin</span>
                   </button>
               )}
 
-              <button
-                onClick={onLogout}
-                className="flex w-full items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50"
-              >
-                <LogOut size={20} />
-                <span>Cerrar Sesión</span>
-              </button>
+              <div className="border-t border-gray-100 my-2 pt-2">
+                <button
+                    onClick={onLogout}
+                    className="flex w-full items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50"
+                >
+                    <LogOut size={20} />
+                    <span>Cerrar Sesión</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {children}
       </main>
 
-      <footer className="bg-white border-t border-gray-200 py-6">
+      <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
           <p>&copy; {new Date().getFullYear()} AnatoPlus. Todos los derechos reservados.</p>
         </div>
