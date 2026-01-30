@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Question, Topic } from '../types';
-import { ArrowLeft, HelpCircle, CheckCircle, XCircle, AlertCircle, RefreshCcw, ArrowRight, Eye, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, HelpCircle, CheckCircle, XCircle, AlertCircle, RefreshCcw, ArrowRight, Eye, EyeOff, Loader2, Save } from 'lucide-react';
 
 interface QuizViewProps {
   topic: Topic;
@@ -21,6 +21,9 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [score, setScore] = useState(0);
   
+  // Track eliminated/crossed-out options for the current question
+  const [eliminatedOptions, setEliminatedOptions] = useState<number[]>([]);
+
   // Track all user answers: map question index to selected option index
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
 
@@ -35,6 +38,7 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
     // Reset local question state when index changes
     setSelectedOption(null);
     setIsAnswerChecked(false);
+    setEliminatedOptions([]); // Reset crossed-out options
   }, [currentIndex]);
 
   const currentQuestion = questions[currentIndex];
@@ -42,7 +46,24 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
 
   const handleOptionSelect = (index: number) => {
     if (isAnswerChecked) return;
+    
+    // If selecting an eliminated option, un-eliminate it automatically for better UX
+    if (eliminatedOptions.includes(index)) {
+        setEliminatedOptions(prev => prev.filter(i => i !== index));
+    }
+    
     setSelectedOption(index);
+  };
+
+  const toggleElimination = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation(); // Prevent triggering selection
+    if (isAnswerChecked) return;
+
+    setEliminatedOptions(prev => 
+        prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
   };
 
   const checkAnswer = () => {
@@ -98,6 +119,7 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
     setUserAnswers(new Array(questions.length).fill(null));
     setSelectedOption(null);
     setIsAnswerChecked(false);
+    setEliminatedOptions([]);
   };
 
   if (!currentQuestion) {
@@ -278,38 +300,63 @@ const QuizView: React.FC<QuizViewProps> = ({ topic, questions, onBack, onComplet
 
           <div className="space-y-3">
             {currentQuestion.options.map((option, idx) => {
+              const isEliminated = eliminatedOptions.includes(idx);
               let optionClass = "border-gray-200 hover:border-amber-300 hover:bg-amber-50";
-              let icon = null;
+              let resultIcon = null;
 
               if (isAnswerChecked) {
                 if (idx === currentQuestion.correctAnswerIndex) {
                   optionClass = "border-green-500 bg-green-50 text-green-800";
-                  icon = <CheckCircle size={20} className="text-green-600" />;
+                  resultIcon = <CheckCircle size={20} className="text-green-600" />;
                 } else if (idx === selectedOption) {
                   optionClass = "border-red-300 bg-red-50 text-red-800";
-                  icon = <XCircle size={20} className="text-red-500" />;
+                  resultIcon = <XCircle size={20} className="text-red-500" />;
                 } else {
                    optionClass = "border-gray-100 opacity-50";
                 }
-              } else if (selectedOption === idx) {
-                optionClass = "border-amber-500 bg-amber-50 ring-1 ring-amber-500";
+              } else {
+                  if (selectedOption === idx) {
+                    optionClass = "border-amber-500 bg-amber-50 ring-1 ring-amber-500";
+                  } else if (isEliminated) {
+                    optionClass = "border-gray-200 bg-gray-50 opacity-60";
+                  }
               }
 
               return (
-                <button
+                <div 
                   key={idx}
-                  disabled={isAnswerChecked}
-                  onClick={() => handleOptionSelect(idx)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group ${optionClass}`}
+                  onClick={() => !isAnswerChecked && handleOptionSelect(idx)}
+                  className={`w-full relative text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${optionClass}`}
                 >
-                  <span className="flex items-center gap-3">
-                    <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${isAnswerChecked && idx === currentQuestion.correctAnswerIndex ? 'bg-green-200 text-green-700' : 'bg-gray-100 text-gray-500 group-hover:bg-white'}`}>
+                  <span className={`flex items-center gap-3 ${isEliminated && !isAnswerChecked && selectedOption !== idx ? 'line-through decoration-gray-400 decoration-2 text-gray-400' : ''}`}>
+                    <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold flex-shrink-0 ${
+                        isAnswerChecked && idx === currentQuestion.correctAnswerIndex ? 'bg-green-200 text-green-700' : 
+                        selectedOption === idx ? 'bg-amber-200 text-amber-800' :
+                        'bg-gray-100 text-gray-500 group-hover:bg-white'
+                    }`}>
                       {String.fromCharCode(65 + idx)}
                     </span>
-                    <span className="font-medium">{option}</span>
+                    <span className="font-medium leading-snug">{option}</span>
                   </span>
-                  {icon}
-                </button>
+                  
+                  {/* Right side icons */}
+                  <div className="flex items-center gap-2">
+                      {!isAnswerChecked && (
+                          <button
+                            onClick={(e) => toggleElimination(e, idx)}
+                            className={`p-2 rounded-full transition-colors z-10 ${
+                                isEliminated 
+                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' 
+                                : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100'
+                            }`}
+                            title={isEliminated ? "Restaurar opción" : "Descartar opción"}
+                          >
+                             {isEliminated ? <Eye size={18} /> : <EyeOff size={18} />}
+                          </button>
+                      )}
+                      {resultIcon}
+                  </div>
+                </div>
               );
             })}
           </div>
