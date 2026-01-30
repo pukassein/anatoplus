@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   LayoutDashboard, 
   HelpCircle, 
@@ -24,13 +24,28 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, onNavigate, onLogout }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  // Initialize closed to prevent blocking content on mobile load
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Check screen size on mount to auto-open on desktop
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
+
+  const handleMobileNav = (action: () => void) => {
+    action();
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   const NavItem = ({ view, label, icon: Icon }: { view: ViewState; label: string; icon: any }) => {
     const isActive = currentView === view;
     return (
       <button
-        onClick={() => onNavigate(view)}
+        onClick={() => handleMobileNav(() => onNavigate(view))}
         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-r-full transition-colors duration-200 mb-1 border-l-4 ${
           isActive
             ? 'bg-amber-50 text-amber-600 border-amber-500 font-medium'
@@ -45,6 +60,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
 
   return (
     <div className="min-h-screen bg-gray-50 flex overflow-hidden">
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside 
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
@@ -66,9 +89,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
            >
              <ChevronLeft size={20} />
            </button>
+           {/* Mobile Close Button (Added for clarity) */}
+           <button 
+             onClick={() => setIsSidebarOpen(false)}
+             className="lg:hidden p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+           >
+             <X size={24} />
+           </button>
         </div>
 
-        <div className="flex-1 py-6 pr-4 overflow-y-auto">
+        <div className="flex-1 py-6 pr-4 overflow-y-auto custom-scrollbar">
           <NavItem view={ViewState.ADMIN_DASHBOARD} label="Dashboard" icon={LayoutDashboard} />
           <NavItem view={ViewState.ADMIN_QUESTIONS} label="Preguntas" icon={HelpCircle} />
           <NavItem view={ViewState.ADMIN_USERS} label="Usuarios" icon={Users} />
@@ -82,7 +112,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
           </div>
           
           <button
-            onClick={() => onNavigate(ViewState.DASHBOARD)}
+            onClick={() => handleMobileNav(() => onNavigate(ViewState.DASHBOARD))}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-r-full text-blue-600 hover:bg-blue-50 border-l-4 border-transparent transition-colors duration-200"
           >
             <BookOpen size={20} />
@@ -90,7 +120,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
           </button>
 
           <button
-            onClick={onLogout}
+            onClick={() => handleMobileNav(onLogout)}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-r-full text-gray-500 hover:bg-red-50 hover:text-red-600 border-l-4 border-transparent transition-colors duration-200"
           >
             <LogOut size={20} />
@@ -114,17 +144,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Header (Desktop & Mobile) */}
-        <header className="bg-white shadow-sm h-16 flex items-center px-4 justify-between lg:px-8 border-b border-gray-200">
+        <header className="bg-white shadow-sm h-16 flex items-center px-4 justify-between lg:px-8 border-b border-gray-200 shrink-0">
            <div className="flex items-center gap-4">
              {/* Toggle Button */}
              <button 
                onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-               className={`p-2 rounded-md text-gray-600 hover:bg-gray-100 ${isSidebarOpen ? 'lg:hidden' : ''}`}
+               className="p-2 rounded-md text-gray-600 hover:bg-gray-100 lg:hidden"
              >
                <Menu size={24} />
              </button>
+             {/* Desktop Toggle Button (Only shows when closed) */}
+             {!isSidebarOpen && (
+                 <button 
+                   onClick={() => setIsSidebarOpen(true)} 
+                   className="hidden lg:block p-2 rounded-md text-gray-600 hover:bg-gray-100"
+                 >
+                   <Menu size={24} />
+                 </button>
+             )}
              
-             <h1 className="font-bold text-lg text-gray-800">
+             <h1 className="font-bold text-lg text-gray-800 truncate">
                {currentView === ViewState.ADMIN_DASHBOARD && 'Dashboard'}
                {currentView === ViewState.ADMIN_QUESTIONS && 'Gestión de Contenido'}
                {currentView === ViewState.ADMIN_USERS && 'Usuarios'}
@@ -140,7 +179,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
            </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-8">
           {children}
         </main>
       </div>
