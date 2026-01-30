@@ -13,7 +13,8 @@ export enum ViewState {
   ADMIN_USERS = 'ADMIN_USERS',
   ADMIN_COMMENTS = 'ADMIN_COMMENTS',
   ADMIN_PLANS = 'ADMIN_PLANS',
-  ADMIN_PAYMENTS = 'ADMIN_PAYMENTS' // New View
+  ADMIN_PAYMENTS = 'ADMIN_PAYMENTS',
+  ADMIN_NEWS = 'ADMIN_NEWS' // New View
 }
 
 export interface User {
@@ -103,4 +104,13 @@ export interface UserStats {
   correctQuestions: number;
   accuracy: number;
   streakDays: number;
+}
+
+export interface NewsPost {
+  id: string;
+  title: string; // e.g., "Ingresó en UNA 2024"
+  studentName: string;
+  message: string;
+  imageUrl: string;
+  date: string;
 }

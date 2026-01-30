@@ -10,6 +10,7 @@ import {
   Radar, 
   Tooltip 
 } from 'recharts';
+import NewsFeed from './NewsFeed'; // Import NewsFeed
 
 interface DashboardProps {
   user: User;
@@ -260,6 +261,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           ))}
         </div>
       </div>
+
+      {/* NEW: News Feed Section at the bottom */}
+      <NewsFeed />
 
       {/* Study Configuration Modal */}
       {isModalOpen && (

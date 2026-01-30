@@ -9,6 +9,7 @@ import AdminModules from './components/AdminModules';
 import AdminUsers from './components/AdminUsers'; 
 import AdminPlans from './components/AdminPlans'; 
 import AdminPayments from './components/AdminPayments'; // New import
+import AdminNews from './components/AdminNews'; // New import
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
 import QuizView from './components/QuizView';
@@ -420,6 +421,7 @@ const App: React.FC = () => {
         {currentView === ViewState.ADMIN_USERS && <AdminUsers />}
         {currentView === ViewState.ADMIN_PLANS && <AdminPlans />}
         {currentView === ViewState.ADMIN_PAYMENTS && <AdminPayments />}
+        {currentView === ViewState.ADMIN_NEWS && <AdminNews />}
         {(currentView === ViewState.ADMIN_COMMENTS) && (
            <div className="p-10 text-center text-gray-500 bg-white rounded-lg border border-dashed">
               Sección en desarrollo

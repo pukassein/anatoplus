@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { MOCK_MODULES, MOCK_TOPICS, MOCK_QUESTIONS } from '../constants';
-import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails } from '../types';
+import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails, NewsPost } from '../types';
 
 // ==========================================
 // CONFIGURATION
@@ -859,5 +859,101 @@ export const api = {
             imageUrl: q.imagen_video
         };
     });
+  },
+
+  // --- NEWS & NOVEDADES ---
+  
+  getNews: async (): Promise<NewsPost[]> => {
+      // Mock data in case DB table doesn't exist yet
+      const MOCK_NEWS: NewsPost[] = [
+          { 
+              id: '1', 
+              title: '¡Ingreso Top 10!', 
+              studentName: 'Sofia Martinez', 
+              message: 'Gracias a AnatoPlus pude organizar mis tiempos y repasar los temas más difíciles. ¡Logré el puesto 5!', 
+              imageUrl: 'https://picsum.photos/id/64/200/200', 
+              date: '2023-12-15' 
+          },
+          { 
+              id: '2', 
+              title: 'Examen Final Aprobado', 
+              studentName: 'Juan Carlos D.', 
+              message: 'Las preguntas de neuroanatomía son idénticas a las del examen. 100% recomendado.', 
+              imageUrl: 'https://picsum.photos/id/91/200/200', 
+              date: '2024-01-20' 
+          },
+          {
+              id: '3',
+              title: 'Mejoré mi promedio',
+              studentName: 'Andrea B.',
+              message: 'Pasé de aplazarme a sacar un 4 en el final. La práctica hace al maestro.',
+              imageUrl: 'https://picsum.photos/id/129/200/200', 
+              date: '2024-02-10'
+          }
+      ];
+
+      if (!USE_DATABASE) return MOCK_NEWS;
+
+      const { data, error } = await supabase
+        .from('novedades')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+          // Fallback if table doesn't exist
+          return MOCK_NEWS;
+      }
+
+      return data.map((n: any) => ({
+          id: n.id.toString(),
+          title: n.title,
+          studentName: n.student_name,
+          message: n.message,
+          imageUrl: n.image_url,
+          date: n.created_at
+      }));
+  },
+
+  uploadNewsImage: async (file: File): Promise<string> => {
+      if (!USE_DATABASE) return URL.createObjectURL(file); // Mock fallback
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `news-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('news-images') // User needs to create this bucket
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('news-images').getPublicUrl(filePath);
+      return data.publicUrl;
+  },
+
+  createNews: async (post: Partial<NewsPost>) => {
+      const { error } = await supabase.from('novedades').insert([{
+          title: post.title,
+          student_name: post.studentName,
+          message: post.message,
+          image_url: post.imageUrl
+      }]);
+      if (error) throw error;
+  },
+
+  updateNews: async (id: string, post: Partial<NewsPost>) => {
+      const { error } = await supabase.from('novedades').update({
+          title: post.title,
+          student_name: post.studentName,
+          message: post.message,
+          image_url: post.imageUrl
+      }).eq('id', id);
+      if (error) throw error;
+  },
+
+  deleteNews: async (id: string) => {
+      const { error } = await supabase.from('novedades').delete().eq('id', id);
+      if (error) throw error;
   }
+
 };

@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  BookOpen
+  BookOpen,
+  Megaphone
 } from 'lucide-react';
 import { User, ViewState } from '../types';
 
@@ -72,8 +73,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
           <NavItem view={ViewState.ADMIN_QUESTIONS} label="Preguntas" icon={HelpCircle} />
           <NavItem view={ViewState.ADMIN_USERS} label="Usuarios" icon={Users} />
           <NavItem view={ViewState.ADMIN_PAYMENTS} label="Pagos" icon={Wallet} />
-          <NavItem view={ViewState.ADMIN_COMMENTS} label="Comentarios" icon={MessageSquare} />
+          <NavItem view={ViewState.ADMIN_NEWS} label="Novedades" icon={Megaphone} />
           <NavItem view={ViewState.ADMIN_PLANS} label="Planes" icon={CreditCard} />
+          <NavItem view={ViewState.ADMIN_COMMENTS} label="Comentarios" icon={MessageSquare} />
           
           <div className="mt-8 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
             Navegación
@@ -129,11 +131,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
                {currentView === ViewState.ADMIN_COMMENTS && 'Comentarios'}
                {currentView === ViewState.ADMIN_PLANS && 'Planes y Precios'}
                {currentView === ViewState.ADMIN_PAYMENTS && 'Solicitudes de Pago'}
+               {currentView === ViewState.ADMIN_NEWS && 'Novedades y Testimonios'}
              </h1>
            </div>
            
            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500 hidden sm:block">v1.3.0</span>
+              <span className="text-sm text-gray-500 hidden sm:block">v1.3.1</span>
            </div>
         </header>
 
