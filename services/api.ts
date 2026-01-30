@@ -139,7 +139,7 @@ export const api = {
   // --- PAYMENTS & PLANS ---
 
   getBankDetails: async (): Promise<BankDetails> => {
-      if (!USE_DATABASE) return { bankName: 'Itaú Mock', accountName: 'Anato Mock', ruc: '000', accountNumber: '0000' };
+      if (!USE_DATABASE) return { bankName: 'Ueno Bank', accountName: 'Anato Admin', alias: '0981123456', pixKey: 'email@pix.com' };
 
       const { data, error } = await supabase
         .from('app_settings')
@@ -149,7 +149,7 @@ export const api = {
       
       if (error || !data) {
           // Return defaults if not found
-          return { bankName: 'Itaú Paraguay', accountName: 'AnatoPlus S.A.', ruc: '80012345-6', accountNumber: '7200123456' };
+          return { bankName: 'Ueno Bank', accountName: 'AnatoPlus S.A.', alias: '0981-123-456', pixKey: '' };
       }
 
       return data.value as BankDetails;

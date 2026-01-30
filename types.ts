@@ -93,10 +93,10 @@ export interface PaymentRequest {
 }
 
 export interface BankDetails {
-  bankName: string;
-  accountName: string;
-  ruc: string;
-  accountNumber: string;
+  bankName: string;    // Método / Banco (ej. "PIX", "Transferencia")
+  accountName: string; // Titular (ej. "Juan Perez")
+  alias: string;       // El dato clave (ej. Email, Teléfono, CVU)
+  pixKey?: string;     // Clave PIX Opcional
 }
 
 export interface UserStats {

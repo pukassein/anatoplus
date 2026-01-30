@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { PaymentRequest, BankDetails } from '../types';
-import { Loader2, CheckCircle, XCircle, FileText, Calendar, User, CreditCard, X, Eye, Settings } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Calendar, User, CreditCard, X, Eye, Settings } from 'lucide-react';
 
 const AdminPayments: React.FC = () => {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
@@ -11,7 +11,7 @@ const AdminPayments: React.FC = () => {
 
     // Settings Modal
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [bankForm, setBankForm] = useState<BankDetails>({ bankName: '', accountName: '', ruc: '', accountNumber: '' });
+    const [bankForm, setBankForm] = useState<BankDetails>({ bankName: '', accountName: '', alias: '', pixKey: '' });
     const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     const fetchRequests = async () => {
@@ -219,20 +219,20 @@ const AdminPayments: React.FC = () => {
                         </div>
                         <form onSubmit={handleSaveSettings} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Nombre del Banco</label>
-                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.bankName} onChange={e => setBankForm({...bankForm, bankName: e.target.value})} />
+                                <label className="block text-sm font-medium text-gray-700">Nombre del Banco / Método</label>
+                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.bankName} onChange={e => setBankForm({...bankForm, bankName: e.target.value})} placeholder="Ej. PIX o Banco Familiar" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Titular de la Cuenta</label>
-                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.accountName} onChange={e => setBankForm({...bankForm, accountName: e.target.value})} />
+                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.accountName} onChange={e => setBankForm({...bankForm, accountName: e.target.value})} placeholder="Ej. Juan Pérez" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">RUC / CI</label>
-                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.ruc} onChange={e => setBankForm({...bankForm, ruc: e.target.value})} />
+                                <label className="block text-sm font-medium text-gray-700">Alias / Nro de Cuenta</label>
+                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.alias} onChange={e => setBankForm({...bankForm, alias: e.target.value})} placeholder="Ej. email@banco.com o 0981..." />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Número de Cuenta</label>
-                                <input required className="w-full border p-2 rounded mt-1" value={bankForm.accountNumber} onChange={e => setBankForm({...bankForm, accountNumber: e.target.value})} />
+                                <label className="block text-sm font-medium text-gray-700">Clave PIX (Opcional)</label>
+                                <input className="w-full border p-2 rounded mt-1" value={bankForm.pixKey || ''} onChange={e => setBankForm({...bankForm, pixKey: e.target.value})} placeholder="Ej. email@pix.com.br" />
                             </div>
                             <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
