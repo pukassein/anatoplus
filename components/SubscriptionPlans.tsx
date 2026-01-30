@@ -88,98 +88,134 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ user, onBack }) =
                 className="bg-white rounded-2xl shadow-2xl max-w-lg w-full flex flex-col max-h-[90vh] animate-scale-up dark:bg-slate-800"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl dark:bg-slate-700 dark:border-slate-600">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Confirmar Pago</h3>
-                    <button onClick={() => setSelectedPlan(null)}><X className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" /></button>
+                    <div>
+                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Confirmar Suscripción</h3>
+                         <p className="text-sm text-gray-500 dark:text-gray-400">Plan {selectedPlan?.name} • Gs. {selectedPlan?.price.toLocaleString()}</p>
+                    </div>
+                    <button onClick={() => setSelectedPlan(null)} className="p-2 hover:bg-gray-200 rounded-full dark:hover:bg-slate-600"><X className="text-gray-500 dark:text-gray-400" size={20} /></button>
                 </div>
                 
-                <div className="p-6 overflow-y-auto">
-                    <p className="text-gray-600 mb-6 text-sm dark:text-gray-300">
-                        Para activar el plan <span className="font-bold text-gray-900 dark:text-white">{selectedPlan?.name}</span> (Gs. {selectedPlan?.price.toLocaleString()}), elige tu método de pago preferido:
-                    </p>
+                <div className="p-6 overflow-y-auto custom-scrollbar space-y-8">
+                    
+                    {/* STEP 1 */}
+                    <section>
+                         <div className="flex items-center gap-3 mb-4">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm dark:bg-blue-900/50 dark:text-blue-300">1</span>
+                            <h4 className="font-bold text-gray-800 text-lg dark:text-gray-200">Realiza la Transferencia</h4>
+                         </div>
 
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
-                        {bankDetails ? (
-                            <div className="space-y-4">
-                                {/* Paraguay Bank Details */}
-                                <div>
-                                    <h4 className="font-bold text-blue-900 mb-2 border-b border-blue-200 pb-1 dark:text-blue-200 dark:border-blue-700">Opción 1: Banco Local (Paraguay)</h4>
-                                    <div className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-blue-600 uppercase font-bold dark:text-blue-400">Método / Banco</span>
-                                            <span className="font-semibold text-lg">{bankDetails.bankName}</span>
+                        <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 dark:bg-blue-900/10 dark:border-blue-800/50">
+                            {bankDetails ? (
+                                <div className="space-y-6">
+                                    {/* Paraguay Bank Details */}
+                                    <div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h5 className="font-bold text-blue-900 dark:text-blue-200 text-sm uppercase tracking-wide">Opción 1: Banco Local</h5>
+                                            <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">PY</span>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-blue-600 uppercase font-bold dark:text-blue-400">Titular</span>
-                                            <span className="font-semibold">{bankDetails.accountName}</span>
-                                        </div>
-                                        <div className="flex flex-col mt-2">
-                                            <span className="text-xs text-blue-600 uppercase font-bold mb-1 dark:text-blue-400">Alias / Cuenta (Click para copiar)</span>
-                                            <button 
-                                                onClick={() => navigator.clipboard.writeText(bankDetails.alias)}
-                                                className="font-mono font-bold bg-white p-3 rounded border border-blue-200 text-center hover:bg-blue-100 flex items-center justify-center gap-2 transition-colors dark:bg-slate-900 dark:border-slate-600 dark:hover:bg-slate-800"
-                                                title="Copiar al portapapeles"
-                                            >
-                                                <Copy size={16} />
-                                                {bankDetails.alias}
-                                            </button>
+                                        <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm space-y-2 dark:bg-slate-800 dark:border-slate-700">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500 dark:text-gray-400">Banco:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-200">{bankDetails.bankName}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500 dark:text-gray-400">Titular:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-200 text-right">{bankDetails.accountName}</span>
+                                            </div>
+                                            <div className="pt-2 border-t border-gray-100 mt-2 dark:border-slate-700">
+                                                <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Cuenta / Alias:</p>
+                                                <button 
+                                                    onClick={() => navigator.clipboard.writeText(bankDetails.alias)}
+                                                    className="w-full flex items-center justify-between bg-gray-50 hover:bg-blue-50 p-2 rounded border border-gray-200 hover:border-blue-300 transition-all group dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                                                >
+                                                    <span className="font-mono font-bold text-blue-700 dark:text-blue-300">{bankDetails.alias}</span>
+                                                    <Copy size={14} className="text-gray-400 group-hover:text-blue-500" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    {/* PIX Option */}
+                                    {bankDetails.pixKey && (
+                                        <div>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h5 className="font-bold text-green-700 dark:text-green-400 text-sm uppercase tracking-wide">Opción 2: PIX</h5>
+                                                <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-200">BR</span>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                                                <p className="text-xs text-gray-500 mb-1 dark:text-gray-400">Clave PIX:</p>
+                                                <button 
+                                                    onClick={() => navigator.clipboard.writeText(bankDetails.pixKey || '')}
+                                                    className="w-full flex items-center justify-between bg-gray-50 hover:bg-green-50 p-2 rounded border border-gray-200 hover:border-green-300 transition-all group dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                                                >
+                                                    <span className="font-mono font-bold text-green-700 dark:text-green-400 text-sm break-all text-left">{bankDetails.pixKey}</span>
+                                                    <Copy size={14} className="text-gray-400 group-hover:text-green-500 shrink-0 ml-2" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-
-                                {/* PIX Option (if available) */}
-                                {bankDetails.pixKey && (
-                                    <div className="pt-2">
-                                        <h4 className="font-bold text-blue-900 mb-2 border-b border-blue-200 pb-1 dark:text-blue-200 dark:border-blue-700">Opción 2: PIX (Brasil)</h4>
-                                        <div className="flex flex-col mt-2">
-                                            <span className="text-xs text-blue-600 uppercase font-bold mb-1 dark:text-blue-400">Clave PIX (Click para copiar)</span>
-                                            <button 
-                                                onClick={() => navigator.clipboard.writeText(bankDetails.pixKey || '')}
-                                                className="font-mono font-bold bg-white p-3 rounded border border-blue-200 text-center hover:bg-blue-100 flex items-center justify-center gap-2 transition-colors dark:bg-slate-900 dark:border-slate-600 dark:hover:bg-slate-800 text-blue-800 dark:text-blue-300"
-                                                title="Copiar Clave PIX"
-                                            >
-                                                <Copy size={16} />
-                                                {bankDetails.pixKey}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-blue-700">Cargando datos...</p>
-                        )}
-                    </div>
-
-                    <form onSubmit={handleSubmitPayment} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2 dark:text-gray-300">Subir Comprobante (Captura)</label>
-                            <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-amber-500 transition-colors bg-gray-50 dark:bg-slate-700 dark:border-slate-600">
-                                {file ? (
-                                    <div className="text-green-600 font-medium flex flex-col items-center dark:text-green-400">
-                                        <Check className="mb-2" />
-                                        {file.name}
-                                        <button type="button" onClick={() => setFile(null)} className="text-xs text-red-500 underline mt-2 relative z-10 dark:text-red-400">Cambiar</button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <UploadCloud size={32} className="text-gray-400 mb-2" />
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">Haz clic para seleccionar o arrastra la imagen aquí.</p>
-                                        <input type="file" accept="image/*,application/pdf" className="absolute opacity-0 w-full h-full cursor-pointer inset-0" onChange={handleFileChange} />
-                                    </>
-                                )}
-                            </div>
+                            ) : (
+                                <div className="flex justify-center p-4"><Loader2 className="animate-spin text-blue-500" /></div>
+                            )}
                         </div>
+                    </section>
 
-                        <button 
-                            type="submit" 
-                            disabled={!file || uploading}
-                            className={`w-full py-3 rounded-lg font-bold text-white shadow-md flex items-center justify-center gap-2 ${
-                                !file || uploading ? 'bg-gray-300 cursor-not-allowed dark:bg-slate-600' : 'bg-amber-600 hover:bg-amber-700'
-                            }`}
-                        >
-                            {uploading ? <Loader2 className="animate-spin" /> : 'Enviar Comprobante'}
-                        </button>
-                    </form>
+                    {/* STEP 2 */}
+                    <section>
+                         <div className="flex items-center gap-3 mb-4">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-bold text-sm dark:bg-amber-900/50 dark:text-amber-300">2</span>
+                            <h4 className="font-bold text-gray-800 text-lg dark:text-gray-200">Adjunta el Comprobante</h4>
+                         </div>
+                        
+                        <form onSubmit={handleSubmitPayment} className="space-y-4">
+                            <div className="relative group">
+                                <input 
+                                    type="file" 
+                                    accept="image/*,application/pdf" 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                    onChange={handleFileChange} 
+                                />
+                                <div className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all duration-200 ${
+                                    file 
+                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 dark:border-green-500' 
+                                    : 'border-gray-300 bg-gray-50 hover:border-amber-400 hover:bg-amber-50 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600 dark:hover:border-amber-500'
+                                }`}>
+                                    {file ? (
+                                        <div className="animate-scale-up flex flex-col items-center">
+                                            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2 dark:bg-green-900/50">
+                                                <Check className="text-green-600 dark:text-green-400" size={24} />
+                                            </div>
+                                            <p className="font-bold text-green-700 text-sm dark:text-green-400 line-clamp-1 break-all max-w-[200px]">{file.name}</p>
+                                            <span className="text-xs text-green-600 mt-1 dark:text-green-500 bg-green-100 px-2 py-0.5 rounded">Listo para enviar</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-2">
+                                            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform dark:bg-amber-900/30">
+                                                <UploadCloud className="text-amber-600 dark:text-amber-400" size={24} />
+                                            </div>
+                                            <p className="font-bold text-gray-700 dark:text-gray-300">Toca para subir captura</p>
+                                            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Requerido para activar</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                disabled={!file || uploading}
+                                className={`w-full py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all mt-4 ${
+                                    !file || uploading 
+                                    ? 'bg-gray-300 cursor-not-allowed dark:bg-slate-600 dark:text-gray-400' 
+                                    : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 hover:shadow-amber-500/30 transform active:scale-[0.98]'
+                                }`}
+                            >
+                                {uploading ? <Loader2 className="animate-spin" /> : 'Confirmar y Enviar'}
+                            </button>
+                        </form>
+                    </section>
                 </div>
             </div>
         </div>
