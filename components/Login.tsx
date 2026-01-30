@@ -55,16 +55,16 @@ const Login: React.FC = () => {
   // SUCCESS CONFIRMATION VIEW
   if (showSuccessMessage) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden p-8 text-center animate-fade-in-up">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="text-green-600" size={40} />
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 dark:from-slate-900 dark:to-slate-800">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden p-8 text-center animate-fade-in-up dark:bg-slate-800 dark:border dark:border-slate-700">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-green-900/30">
+                    <CheckCircle className="text-green-600 dark:text-green-400" size={40} />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Revisa tu correo!</h2>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                    Hemos enviado un enlace de confirmación a <br/> <span className="font-semibold text-gray-800">{email}</span>.
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">¡Revisa tu correo!</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed dark:text-gray-300">
+                    Hemos enviado un enlace de confirmación a <br/> <span className="font-semibold text-gray-800 dark:text-gray-100">{email}</span>.
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-sm text-amber-800">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
                     Por favor, haz clic en el enlace del correo para activar tu cuenta y comenzar a estudiar.
                 </div>
                 <button
@@ -79,8 +79,8 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 dark:from-slate-900 dark:to-slate-800">
+      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row dark:bg-slate-800">
         
         {/* Left Side - Visual */}
         <div className={`md:w-1/2 p-8 md:p-12 text-white flex flex-col justify-center relative overflow-hidden transition-colors duration-500 bg-amber-500`}>
@@ -126,16 +126,16 @@ const Login: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">
               {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
             </h3>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-sm dark:text-gray-400">
               {isSignUp ? 'Completa todos los campos.' : 'Ingresa tu correo y contraseña.'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2 animate-fade-in">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2 animate-fade-in dark:bg-red-900/20 dark:text-red-400">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
                 <span>{error}</span>
             </div>
@@ -146,7 +146,7 @@ const Login: React.FC = () => {
             {isSignUp && (
                 <>
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Nombre Completo</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Nombre Completo</label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
@@ -155,14 +155,14 @@ const Login: React.FC = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Ej. Juan Pérez"
-                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             />
                         </div>
                     </div>
 
                     <div className="flex gap-4">
                         <div className="space-y-1 flex-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase">Fecha Nacimiento</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Fecha Nacimiento</label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input
@@ -170,14 +170,14 @@ const Login: React.FC = () => {
                                     required
                                     value={birthDate}
                                     onChange={(e) => setBirthDate(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                 />
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Universidad / Facultad</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Universidad / Facultad</label>
                         <div className="relative">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
@@ -186,7 +186,7 @@ const Login: React.FC = () => {
                                 value={affiliation}
                                 onChange={(e) => setAffiliation(e.target.value)}
                                 placeholder="Ej. UNA - FCM"
-                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             />
                         </div>
                     </div>
@@ -194,7 +194,7 @@ const Login: React.FC = () => {
             )}
 
             <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">Correo Electrónico</label>
+                <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Correo Electrónico</label>
                 <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
@@ -203,13 +203,13 @@ const Login: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="tucorreo@ejemplo.com"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                     />
                 </div>
             </div>
 
             <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">Contraseña</label>
+                <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Contraseña</label>
                 <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
@@ -218,14 +218,14 @@ const Login: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                     />
                 </div>
             </div>
 
             {isSignUp && (
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Confirmar Contraseña</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Confirmar Contraseña</label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -234,8 +234,8 @@ const Login: React.FC = () => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="••••••••"
-                            className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 outline-none transition-all ${
-                                confirmPassword && password !== confirmPassword ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                            className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 outline-none transition-all dark:bg-slate-700 dark:text-white ${
+                                confirmPassword && password !== confirmPassword ? 'border-red-300 focus:border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
                             }`}
                         />
                     </div>
@@ -261,12 +261,12 @@ const Login: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-500">
+          <div className="mt-6 text-center pt-6 border-t border-gray-100 dark:border-slate-700">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?'}
               <button 
                 onClick={handleSwitchMode}
-                className="ml-2 font-bold text-amber-600 hover:underline focus:outline-none"
+                className="ml-2 font-bold text-amber-600 hover:underline focus:outline-none dark:text-amber-400"
               >
                 {isSignUp ? 'Inicia Sesión' : 'Regístrate'}
               </button>

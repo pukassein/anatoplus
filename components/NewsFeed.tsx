@@ -33,7 +33,7 @@ const NewsFeed: React.FC = () => {
         <div className="mt-8 mb-4 animate-fade-in">
             <div className="flex items-center gap-2 mb-4">
                 <Trophy className="text-amber-500" size={24} />
-                <h2 className="text-xl font-bold text-gray-900">Salón de la Fama y Novedades</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Salón de la Fama y Novedades</h2>
             </div>
             
             {/* Horizontal Scroll Container */}
@@ -41,10 +41,10 @@ const NewsFeed: React.FC = () => {
                 {news.map(item => (
                     <div 
                         key={item.id} 
-                        className="flex-shrink-0 w-80 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative hover:shadow-md transition-shadow group"
+                        className="flex-shrink-0 w-80 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative hover:shadow-md transition-shadow group dark:bg-slate-800 dark:border-slate-700"
                     >
                         {/* Quote Icon Background */}
-                        <div className="absolute top-4 right-4 text-amber-100 group-hover:text-amber-200 transition-colors">
+                        <div className="absolute top-4 right-4 text-amber-100 group-hover:text-amber-200 transition-colors dark:text-amber-900/30 dark:group-hover:text-amber-900/50">
                             <Quote size={40} />
                         </div>
 
@@ -52,21 +52,21 @@ const NewsFeed: React.FC = () => {
                             <img 
                                 src={item.imageUrl} 
                                 alt={item.studentName} 
-                                className="w-12 h-12 rounded-full object-cover border-2 border-amber-100"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-amber-100 dark:border-amber-900"
                             />
                             <div>
-                                <h4 className="font-bold text-gray-900 leading-tight">{item.studentName}</h4>
-                                <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1 inline-block">
+                                <h4 className="font-bold text-gray-900 leading-tight dark:text-gray-100">{item.studentName}</h4>
+                                <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1 inline-block dark:bg-amber-900/30 dark:text-amber-400">
                                     {item.title}
                                 </span>
                             </div>
                         </div>
 
-                        <p className="text-gray-600 text-sm italic leading-relaxed relative z-10">
+                        <p className="text-gray-600 text-sm italic leading-relaxed relative z-10 dark:text-gray-400">
                             "{item.message}"
                         </p>
                         
-                        <div className="mt-4 pt-3 border-t border-gray-50 text-xs text-gray-400">
+                        <div className="mt-4 pt-3 border-t border-gray-50 text-xs text-gray-400 dark:border-slate-700 dark:text-gray-500">
                              {new Date(item.date).toLocaleDateString()}
                         </div>
                     </div>
