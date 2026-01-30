@@ -70,12 +70,18 @@ export interface QuizSession {
   answers: { [questionId: string]: number }; // map questionId to selected option index
 }
 
+// Helper type for the JSON stored in Plan description
+export interface PlanFeature {
+  name: string;    // e.g. "Simulados Pre Parcial"
+  included: boolean; // true = Green Check, false = Red Cross
+}
+
 // Matches database table "Plans"
 export interface Plan {
   id: string;      // mapped from id_Plan
   name: string;    // mapped from nombre
   price: number;   // mapped from precio
-  description: string; // mapped from descripcion
+  description: string; // mapped from descripcion (Now stores JSON string of PlanFeature[])
   type: string;    // mapped from tipo_plan
   createdAt?: string;
 }

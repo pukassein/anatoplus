@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Plan, User, BankDetails } from '../types';
+import { Plan, User, BankDetails, PlanFeature } from '../types';
 import { api } from '../services/api';
-import { Check, Loader2, ArrowLeft, ShieldCheck, UploadCloud, Copy, X } from 'lucide-react';
+import { Check, Loader2, ArrowLeft, ShieldCheck, UploadCloud, Copy, X, XCircle, CheckCircle2 } from 'lucide-react';
 
 interface SubscriptionPlansProps {
     user: User;
@@ -64,6 +64,18 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ user, onBack }) =
             alert("Error al subir el comprobante. Inténtalo de nuevo.");
         } finally {
             setUploading(false);
+        }
+    };
+
+    // Helper to extract features from description JSON
+    const getFeatures = (description: string): PlanFeature[] => {
+        try {
+            const parsed = JSON.parse(description);
+            if (Array.isArray(parsed)) return parsed;
+            return [{ name: description, included: true }];
+        } catch {
+            // Fallback for legacy text descriptions
+            return description ? [{ name: description, included: true }] : [];
         }
     };
 
@@ -197,6 +209,8 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ user, onBack }) =
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
                     {plans.map((plan) => {
                         const isCurrentPlan = user.planId === parseInt(plan.id);
+                        const features = getFeatures(plan.description);
+
                         return (
                             <div 
                                 key={plan.id} 
@@ -211,30 +225,30 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ user, onBack }) =
                                 )}
                                 
                                 <div className="p-8 flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">{plan.name}</h3>
-                                    <div className="flex items-baseline mb-6">
-                                        <span className="text-3xl font-extrabold text-gray-900 dark:text-white">Gs. {plan.price.toLocaleString()}</span>
-                                        <span className="text-gray-500 ml-2 text-sm dark:text-gray-400">/ {plan.type.toLowerCase()}</span>
+                                    <div className="text-center mb-6">
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">{plan.name}</h3>
+                                        <div className="flex items-center justify-center">
+                                            <span className="text-3xl font-extrabold text-gray-900 dark:text-white">Gs. {plan.price.toLocaleString()}</span>
+                                        </div>
+                                        <span className="text-gray-500 text-sm uppercase tracking-wide dark:text-gray-400">{plan.type}</span>
                                     </div>
                                     
-                                    <p className="text-gray-600 text-sm mb-6 min-h-[60px] dark:text-gray-400">
-                                        {plan.description}
-                                    </p>
-
-                                    <ul className="space-y-4 mb-8">
-                                        <li className="flex items-start">
-                                            <Check className="text-green-500 shrink-0 mr-3" size={20} />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">Acceso a todos los módulos</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <Check className="text-green-500 shrink-0 mr-3" size={20} />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">Exámenes ilimitados</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <Check className="text-green-500 shrink-0 mr-3" size={20} />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">Soporte Prioritario</span>
-                                        </li>
-                                    </ul>
+                                    <div className="border-t border-gray-100 pt-6 dark:border-slate-700">
+                                        <ul className="space-y-4">
+                                            {features.map((feature, idx) => (
+                                                <li key={idx} className="flex items-start">
+                                                    {feature.included ? (
+                                                        <CheckCircle2 className="text-green-500 shrink-0 mr-3 mt-0.5" size={20} />
+                                                    ) : (
+                                                        <XCircle className="text-red-400 shrink-0 mr-3 mt-0.5" size={20} />
+                                                    )}
+                                                    <span className={`text-sm ${feature.included ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500 line-through'}`}>
+                                                        {feature.name}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 <div className="p-6 bg-gray-50 border-t border-gray-100 dark:bg-slate-700/50 dark:border-slate-700">

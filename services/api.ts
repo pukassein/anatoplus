@@ -270,7 +270,7 @@ export const api = {
         price: p.precio,
         description: p.descripcion,
         type: p.tipo_plan,
-        createdAt: p.createdAt
+        createdAt: p.createdAt || p.created_at // Handle camelCase or snake_case
     }));
   },
 
@@ -280,7 +280,9 @@ export const api = {
         precio: plan.price,
         descripcion: plan.description,
         tipo_plan: plan.type,
-        createdAt: new Date()
+        // Match exact column names from your database screenshot (camelCase)
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     }]);
 
     if (error) {
@@ -295,7 +297,9 @@ export const api = {
     if (updates.price) dbUpdates.precio = updates.price;
     if (updates.description) dbUpdates.descripcion = updates.description;
     if (updates.type) dbUpdates.tipo_plan = updates.type;
-    dbUpdates.updatedAt = new Date();
+    
+    // Match exact column name from your database screenshot (camelCase)
+    dbUpdates.updatedAt = new Date().toISOString(); 
 
     const { error } = await supabase
         .from('Plans')
