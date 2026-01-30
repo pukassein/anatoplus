@@ -315,6 +315,10 @@ export const api = {
         .eq('id_Plan', parseInt(id));
 
     if (error) {
+        // Handle Foreign Key constraint gracefully
+        if (error.code === '23503') {
+            throw new Error("No se puede eliminar este plan porque hay usuarios o pagos asociados a él. Intenta editarlo o eliminar primero las referencias.");
+        }
         console.error("Error deleting plan:", error);
         throw error;
     }
@@ -513,7 +517,7 @@ export const api = {
     if (subtopicId) {
         query = query.eq('id_subtema', subtopicId);
     } else {
-        query = query.limit(100);
+        query = query.limit(200); // Increased limit slightly to help search find things
     }
 
     const { data, error } = await query;
@@ -554,7 +558,7 @@ export const api = {
           imageUrl: q.imagen_video,
           subtopicId: q.id_subtema,
           options: options.map((o: any) => ({
-              id: o.id_opcion,
+              id: o.id_opcion, // Include ID for updates
               text: o.texto_opcion,
               isCorrect: o.es_correcta
           }))
@@ -589,6 +593,41 @@ export const api = {
 
       const { error: oError } = await supabase.from('Opcions').insert(optionsPayload);
       if (oError) throw oError;
+  },
+
+  updateQuestion: async (id: string, payload: { subtopicId: string, text: string, explanationCorrect: string, explanationIncorrect: string, imageUrl?: string, options: {id?: number, text: string, isCorrect: boolean}[] }) => {
+      // 1. Update Question Text
+      const { error } = await supabase.from('Pregunta').update({
+          id_subtema: payload.subtopicId,
+          texto_pregunta: payload.text,
+          explicacion_correcta: payload.explanationCorrect,
+          explicacion_incorrecta: payload.explanationIncorrect,
+          imagen_video: payload.imageUrl,
+          updatedAt: new Date()
+      }).eq('id_pregunta', id);
+      
+      if (error) throw error;
+
+      // 2. Update Options (Iterate through list)
+      for (const opt of payload.options) {
+          if (opt.id) {
+              // Update existing option
+               await supabase.from('Opcions').update({
+                  texto_opcion: opt.text,
+                  es_correcta: opt.isCorrect,
+                  updatedAt: new Date()
+              }).eq('id_opcion', opt.id);
+          } else if (opt.text.trim() !== '') {
+              // Insert new option if user added one during edit
+              await supabase.from('Opcions').insert({
+                  id_pregunta: parseInt(id),
+                  texto_opcion: opt.text,
+                  es_correcta: opt.isCorrect,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+              });
+          }
+      }
   },
 
   deleteQuestion: async (id: string) => {

@@ -82,11 +82,12 @@ const AdminPlans: React.FC = () => {
   const handleDelete = async (id: string) => {
       if (!window.confirm("¿Estás seguro de eliminar este plan?")) return;
       setIsLoading(true);
+      setError(null);
       try {
           await api.deletePlan(id);
           await fetchPlans();
-      } catch (e) {
-          alert("Error eliminando.");
+      } catch (e: any) {
+          setError(e.message || "Error eliminando el plan.");
       } finally {
           setIsLoading(false);
       }

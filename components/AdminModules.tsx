@@ -10,6 +10,19 @@ interface AdminModulesProps {
   onDeleteModule: (id: string) => void;
 }
 
+interface QuestionFormState {
+    subtopicId: string;
+    text: string;
+    explanationCorrect: string;
+    explanationIncorrect: string;
+    imageUrl: string;
+    options: {
+        id?: number;
+        text: string;
+        isCorrect: boolean;
+    }[];
+}
+
 const AdminModules: React.FC<AdminModulesProps> = ({ 
   modules: initialModules, 
 }) => {
@@ -35,7 +48,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
   const [topicForm, setTopicForm] = useState({ moduleId: '', name: '' });
   const [subtopicForm, setSubtopicForm] = useState({ topicId: '', name: '' });
   
-  const [questionForm, setQuestionForm] = useState({ 
+  const [questionForm, setQuestionForm] = useState<QuestionFormState>({ 
     subtopicId: '', 
     text: '', 
     explanationCorrect: '', 
@@ -99,10 +112,16 @@ const AdminModules: React.FC<AdminModulesProps> = ({
       setSubtopicForm(item ? { topicId: item.topicId, name: item.name } : { topicId: topics[0]?.id || '', name: '' });
     } else if (activeTab === 'Preguntas') {
         if (item) {
+           // Fetch full details including options
            const details = await api.getQuestionDetails(item.id);
            if (details) {
               const loadedOptions = details.options || [];
-              const paddedOptions = loadedOptions.map((o: any) => ({ text: o.text, isCorrect: o.isCorrect }));
+              const paddedOptions = loadedOptions.map((o: any) => ({ 
+                  id: o.id, 
+                  text: o.text, 
+                  isCorrect: o.isCorrect 
+              }));
+              // Fill up to 5 options if less exist
               while(paddedOptions.length < 5) paddedOptions.push({ text: '', isCorrect: false });
               
               setQuestionForm({
@@ -115,6 +134,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
               });
            }
         } else {
+           // Reset form for new question
            setQuestionForm({
              subtopicId: selectedSubtopicFilter || subtopics[0]?.id || '',
              text: '',
@@ -161,23 +181,32 @@ const AdminModules: React.FC<AdminModulesProps> = ({
         if (editingItem) await api.updateSubtopic(editingItem.id, subtopicForm);
         else await api.createSubtopic(subtopicForm);
       } else if (activeTab === 'Preguntas') {
-        if (editingItem) {
-           alert("Para editar preguntas complejas, por favor elimínala y créala de nuevo.");
-        } else {
-           const validOptions = questionForm.options.filter(o => o.text.trim() !== '');
-           const hasCorrect = validOptions.some(o => o.isCorrect);
-           if (validOptions.length < 2) throw new Error("Mínimo 2 opciones requeridas");
-           if (!hasCorrect) throw new Error("Debe marcar una opción como correcta");
+         const validOptions = questionForm.options.filter(o => o.text.trim() !== '');
+         const hasCorrect = validOptions.some(o => o.isCorrect);
+         if (validOptions.length < 2) throw new Error("Mínimo 2 opciones requeridas");
+         if (!hasCorrect) throw new Error("Debe marcar una opción como correcta");
 
-           await api.createQuestion({
-               subtopicId: questionForm.subtopicId,
-               text: questionForm.text,
-               explanationCorrect: questionForm.explanationCorrect,
-               explanationIncorrect: questionForm.explanationIncorrect,
-               imageUrl: questionForm.imageUrl,
-               options: validOptions
-           });
-        }
+         if (editingItem) {
+            // Update existing question
+            await api.updateQuestion(editingItem.id, {
+                subtopicId: questionForm.subtopicId,
+                text: questionForm.text,
+                explanationCorrect: questionForm.explanationCorrect,
+                explanationIncorrect: questionForm.explanationIncorrect,
+                imageUrl: questionForm.imageUrl,
+                options: validOptions
+            });
+         } else {
+            // Create new question
+            await api.createQuestion({
+                subtopicId: questionForm.subtopicId,
+                text: questionForm.text,
+                explanationCorrect: questionForm.explanationCorrect,
+                explanationIncorrect: questionForm.explanationIncorrect,
+                imageUrl: questionForm.imageUrl,
+                options: validOptions
+            });
+         }
       }
       setIsModalOpen(false);
       refreshData();
@@ -214,9 +243,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
   }
 
   const renderTable = () => {
-    // ... [Modules/Topics/Subtopics tables remain unchanged] ...
     if (activeTab === 'Modulos') {
-        // Same as before
         return (
             <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nombre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
@@ -293,6 +320,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                         <div className="line-clamp-1">{stripHtml(q.explanationCorrect)}</div>
                     </td>
                     <td className="px-6 py-4 text-right">
+                    <button onClick={() => handleOpenModal(q)} className="text-amber-600 hover:text-amber-800 mr-3"><Edit2 size={16}/></button>
                     <button onClick={() => handleDelete(q.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
                     </td>
                 </tr>
@@ -360,7 +388,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
                     onChange={(e) => setSelectedSubtopicFilter(e.target.value)}
                     className="flex-1 max-w-xs border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
                  >
-                     <option value="">-- Ver Todo (Últimas 100) --</option>
+                     <option value="">-- Ver Todo (Últimas 200) --</option>
                      {subtopics.map(s => (
                          <option key={s.id} value={s.id}>{s.name} ({s.topicName})</option>
                      ))}
