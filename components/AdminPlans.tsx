@@ -9,6 +9,9 @@ const AdminPlans: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track specific error state for FK constraint
+  const [fkConflictPlanId, setFkConflictPlanId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -21,6 +24,7 @@ const AdminPlans: React.FC = () => {
   const fetchPlans = async () => {
     setIsLoading(true);
     setError(null);
+    setFkConflictPlanId(null);
     try {
       const data = await api.getPlans();
       setPlans(data);
@@ -38,6 +42,7 @@ const AdminPlans: React.FC = () => {
 
   const handleOpenModal = (plan?: Plan) => {
       setError(null);
+      setFkConflictPlanId(null);
       if (plan) {
           setEditingPlan(plan);
           setFormData({
@@ -83,11 +88,36 @@ const AdminPlans: React.FC = () => {
       if (!window.confirm("¿Estás seguro de eliminar este plan?")) return;
       setIsLoading(true);
       setError(null);
+      setFkConflictPlanId(null);
       try {
           await api.deletePlan(id);
           await fetchPlans();
       } catch (e: any) {
-          setError(e.message || "Error eliminando el plan.");
+          if (e.message === 'FK_CONSTRAINT') {
+              setError("No se puede eliminar porque hay usuarios con este plan.");
+              setFkConflictPlanId(id);
+          } else {
+              setError(e.message || "Error eliminando el plan.");
+          }
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+  const handleForceDelete = async () => {
+      if (!fkConflictPlanId) return;
+      
+      const confirmMessage = "TRANQUILO: Los usuarios NO serán eliminados.\n\nEsta acción:\n1. Desvinculará a los usuarios de este plan.\n2. Los pasará a modo 'Gratuito' (Inactivo).\n3. Eliminará el historial de pagos de este plan específico.\n\n¿Deseas continuar?";
+      
+      if (!window.confirm(confirmMessage)) return;
+
+      setIsLoading(true);
+      try {
+          await api.forceDeletePlan(fkConflictPlanId);
+          await fetchPlans(); // This clears the error/conflict state automatically
+          alert("Plan eliminado correctamente. Los usuarios ahora están en modo gratuito.");
+      } catch (e: any) {
+          setError("Error en la eliminación forzada: " + e.message);
       } finally {
           setIsLoading(false);
       }
@@ -111,9 +141,19 @@ const AdminPlans: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-2">
-            <AlertTriangle className="shrink-0 mt-0.5" size={18} />
-            <p className="text-sm">{error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-4 rounded-lg flex flex-col sm:flex-row items-start gap-4 animate-fade-in">
+            <div className="flex gap-2">
+                <AlertTriangle className="shrink-0 mt-0.5" size={18} />
+                <p className="text-sm">{error}</p>
+            </div>
+            {fkConflictPlanId && (
+                <button 
+                    onClick={handleForceDelete}
+                    className="whitespace-nowrap bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm"
+                >
+                    Forzar Eliminación (Desvincular Usuarios)
+                </button>
+            )}
         </div>
       )}
 
@@ -183,7 +223,7 @@ const AdminPlans: React.FC = () => {
 
               <div className="p-6 overflow-y-auto">
                  <form id="plan-form" onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
+                    {error && !fkConflictPlanId && (
                         <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{error}</p>
                     )}
                     <div>

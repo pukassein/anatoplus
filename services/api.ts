@@ -317,11 +317,29 @@ export const api = {
     if (error) {
         // Handle Foreign Key constraint gracefully
         if (error.code === '23503') {
-            throw new Error("No se puede eliminar este plan porque hay usuarios o pagos asociados a él. Intenta editarlo o eliminar primero las referencias.");
+            throw new Error("FK_CONSTRAINT");
         }
         console.error("Error deleting plan:", error);
         throw error;
     }
+  },
+
+  forceDeletePlan: async (id: string) => {
+      const planId = parseInt(id);
+
+      // 1. Remove references in profiles (set to NULL and deactivate)
+      await supabase.from('profiles').update({ plan_id: null, is_active: false }).eq('plan_id', planId);
+      
+      // 2. Remove references in payment_requests (New System)
+      await supabase.from('payment_requests').delete().eq('plan_id', planId);
+
+      // 3. Remove references in Pagos (Old Legacy Table)
+      // This fixes the specific error: update or delete on table "Plans" violates foreign key constraint "Pagos_id_Plan_fkey"
+      await supabase.from('Pagos').delete().eq('id_Plan', planId);
+
+      // 4. Now delete the plan
+      const { error } = await supabase.from('Plans').delete().eq('id_Plan', planId);
+      if (error) throw error;
   },
 
   // --- MODULES ---

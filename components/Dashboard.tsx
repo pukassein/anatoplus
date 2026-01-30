@@ -84,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-4 md:p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 animate-scale-up">
               <div className="flex items-center gap-4">
                   <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm shrink-0">
-                      <Lock size={24} md:size={32} />
+                      <Lock className="w-6 h-6 md:w-8 md:h-8" />
                   </div>
                   <div>
                       <h2 className="text-lg md:text-xl font-bold">Acceso Limitado</h2>
