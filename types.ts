@@ -14,7 +14,8 @@ export enum ViewState {
   ADMIN_COMMENTS = 'ADMIN_COMMENTS',
   ADMIN_PLANS = 'ADMIN_PLANS',
   ADMIN_PAYMENTS = 'ADMIN_PAYMENTS',
-  ADMIN_NEWS = 'ADMIN_NEWS' // New View
+  ADMIN_NEWS = 'ADMIN_NEWS',
+  ADMIN_FINANCES = 'ADMIN_FINANCES' // New View
 }
 
 export interface User {
@@ -93,9 +94,22 @@ export interface PaymentRequest {
   userEmail?: string;
   planId: string;
   planName?: string;
+  planPrice?: number; // The default price of the plan
+  finalPrice?: number; // The ACTUAL amount paid (can be 0 for scholarships)
+  notes?: string; // e.g. "Aval Cursillo"
   proofUrl: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  paidBy: string; // 'Admin 1' | 'Admin 2' or specific names
+  date: string;
+  category?: string;
+  type?: 'income' | 'expense' | 'withdrawal'; // Added 'withdrawal'
 }
 
 export interface BankDetails {

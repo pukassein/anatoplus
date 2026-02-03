@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { MOCK_MODULES, MOCK_TOPICS, MOCK_QUESTIONS } from '../constants';
-import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails, NewsPost } from '../types';
+import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails, NewsPost, Expense } from '../types';
 
 // ==========================================
 // CONFIGURATION
@@ -38,15 +38,13 @@ export const api = {
     },
 
     signUp: async (email: string, password: string, fullName: string, birthDate: string, affiliation: string) => {
-      // Get the current URL (e.g., https://anatoplus.com or http://localhost:3000)
       const redirectUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl, // Dynamic redirect based on where the user is
-          // This data is passed to the 'handle_new_user' trigger in SQL
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             birth_date: birthDate,
@@ -73,17 +71,15 @@ export const api = {
         .single();
       
       if (error) {
-        // Fallback if profile doesn't exist yet (race condition)
         return null;
       }
       return {
           ...data,
-          isActive: data.is_active, // Map from DB column
+          isActive: data.is_active,
           planId: data.plan_id
       };
     },
     
-    // Updates the session ID in the DB to match the current device
     updateUserSessionId: async (userId: string, sessionId: string) => {
         if (!USE_DATABASE) return;
         const { error } = await supabase
@@ -102,7 +98,7 @@ export const api = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, Plans(nombre)') // Join with plans to get name if needed
+      .select('*, Plans(nombre)') 
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -120,8 +116,6 @@ export const api = {
 
   updateUserStatus: async (userId: string, isActive: boolean) => {
       if (!USE_DATABASE) return;
-      
-      // Perform update and return the modified row to confirm success
       const { data, error } = await supabase
         .from('profiles')
         .update({ is_active: isActive })
@@ -129,10 +123,8 @@ export const api = {
         .select();
       
       if (error) throw error;
-
-      // If no rows were returned, the update failed (likely due to RLS policies)
       if (!data || data.length === 0) {
-          throw new Error("No se pudo actualizar. Verifique que sus políticas RLS permitan al administrador editar usuarios.");
+          throw new Error("No se pudo actualizar.");
       }
   },
 
@@ -148,7 +140,6 @@ export const api = {
         .single();
       
       if (error || !data) {
-          // Return defaults if not found
           return { bankName: 'Ueno Bank', accountName: 'AnatoPlus S.A.', alias: '0981-123-456', pixKey: '' };
       }
 
@@ -205,7 +196,7 @@ export const api = {
         .select(`
             *,
             profiles (full_name, email),
-            Plans (nombre)
+            Plans (nombre, precio)
         `)
         .order('created_at', { ascending: false });
 
@@ -218,25 +209,50 @@ export const api = {
           userEmail: req.profiles?.email,
           planId: req.plan_id.toString(),
           planName: req.Plans?.nombre,
+          planPrice: req.Plans?.precio,
+          // New Fields
+          finalPrice: req.final_price !== null ? req.final_price : undefined, 
+          notes: req.notes,
           proofUrl: req.proof_url,
           status: req.status,
           createdAt: req.created_at
       }));
   },
 
-  processPayment: async (requestId: string, userId: string, planId: string, status: 'approved' | 'rejected') => {
-      // 1. Update Request Status
+  processPayment: async (
+      requestId: string, 
+      userId: string, 
+      planId: string, 
+      status: 'approved' | 'rejected',
+      finalPrice?: number,
+      notes?: string
+  ) => {
+      const updates: any = { status: status, updated_at: new Date() };
+      
+      // If provided, update price/notes (useful for Aval/Schools)
+      if (finalPrice !== undefined) updates.final_price = finalPrice;
+      if (notes !== undefined) updates.notes = notes;
+
       const { error } = await supabase
         .from('payment_requests')
-        .update({ status: status, updated_at: new Date() })
+        .update(updates)
         .eq('id', parseInt(requestId));
 
       if (error) throw error;
 
-      // 2. If approved, activate user and set plan
       if (status === 'approved') {
           await api.updateUserPlan(userId, planId);
       }
+  },
+
+  // Update amount and notes for a specific payment later
+  updatePaymentDetails: async (requestId: string, finalPrice: number, notes: string) => {
+      const { error } = await supabase
+        .from('payment_requests')
+        .update({ final_price: finalPrice, notes: notes })
+        .eq('id', parseInt(requestId));
+      
+      if (error) throw error;
   },
 
   updateUserPlan: async (userId: string, planId: string) => {
@@ -244,7 +260,7 @@ export const api = {
 
       const { error } = await supabase
         .from('profiles')
-        .update({ plan_id: parseInt(planId), is_active: true }) // Auto activate on purchase
+        .update({ plan_id: parseInt(planId), is_active: true })
         .eq('id', userId);
 
       if (error) throw error;
@@ -263,14 +279,13 @@ export const api = {
         throw error;
     }
 
-    // Map DB columns to Frontend interface
     return data.map((p: any) => ({
         id: p.id_Plan.toString(),
         name: p.nombre,
         price: p.precio,
         description: p.descripcion,
         type: p.tipo_plan,
-        createdAt: p.createdAt || p.created_at // Handle camelCase or snake_case
+        createdAt: p.createdAt || p.created_at
     }));
   },
 
@@ -280,15 +295,11 @@ export const api = {
         precio: plan.price,
         descripcion: plan.description,
         tipo_plan: plan.type,
-        // Match exact column names from your database screenshot (camelCase)
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     }]);
 
-    if (error) {
-        console.error("Error creating plan:", error);
-        throw error;
-    }
+    if (error) throw error;
   },
 
   updatePlan: async (id: string, updates: Partial<Plan>) => {
@@ -297,8 +308,6 @@ export const api = {
     if (updates.price) dbUpdates.precio = updates.price;
     if (updates.description) dbUpdates.descripcion = updates.description;
     if (updates.type) dbUpdates.tipo_plan = updates.type;
-    
-    // Match exact column name from your database screenshot (camelCase)
     dbUpdates.updatedAt = new Date().toISOString(); 
 
     const { error } = await supabase
@@ -306,10 +315,7 @@ export const api = {
         .update(dbUpdates)
         .eq('id_Plan', parseInt(id)); 
 
-    if (error) {
-        console.error("Error updating plan:", error);
-        throw error;
-    }
+    if (error) throw error;
   },
 
   deletePlan: async (id: string) => {
@@ -319,30 +325,62 @@ export const api = {
         .eq('id_Plan', parseInt(id));
 
     if (error) {
-        // Handle Foreign Key constraint gracefully
-        if (error.code === '23503') {
-            throw new Error("FK_CONSTRAINT");
-        }
-        console.error("Error deleting plan:", error);
+        if (error.code === '23503') throw new Error("FK_CONSTRAINT");
         throw error;
     }
   },
 
   forceDeletePlan: async (id: string) => {
       const planId = parseInt(id);
-
-      // 1. Remove references in profiles (set to NULL and deactivate)
       await supabase.from('profiles').update({ plan_id: null, is_active: false }).eq('plan_id', planId);
-      
-      // 2. Remove references in payment_requests (New System)
       await supabase.from('payment_requests').delete().eq('plan_id', planId);
-
-      // 3. Remove references in Pagos (Old Legacy Table)
-      // This fixes the specific error: update or delete on table "Plans" violates foreign key constraint "Pagos_id_Plan_fkey"
       await supabase.from('Pagos').delete().eq('id_Plan', planId);
-
-      // 4. Now delete the plan
       const { error } = await supabase.from('Plans').delete().eq('id_Plan', planId);
+      if (error) throw error;
+  },
+
+  // --- EXPENSES (FINANCES) ---
+  
+  getExpenses: async (): Promise<Expense[]> => {
+      if (!USE_DATABASE) return [];
+
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) {
+          // If table doesn't exist, we return empty to prevent crash, but console warn
+          console.warn("Expenses table error (possibly missing):", error.message);
+          return [];
+      }
+
+      return data.map((e: any) => ({
+          id: e.id.toString(),
+          description: e.description,
+          amount: e.amount,
+          paidBy: e.paid_by,
+          date: e.date,
+          category: e.category,
+          type: e.type || 'expense' 
+      }));
+  },
+
+  createExpense: async (expense: Partial<Expense>) => {
+      const { error } = await supabase.from('expenses').insert([{
+          description: expense.description,
+          amount: expense.amount,
+          paid_by: expense.paidBy,
+          date: expense.date,
+          category: expense.category,
+          type: expense.type || 'expense',
+          created_at: new Date()
+      }]);
+      if (error) throw error;
+  },
+
+  deleteExpense: async (id: string) => {
+      const { error } = await supabase.from('expenses').delete().eq('id', id);
       if (error) throw error;
   },
 
@@ -356,10 +394,7 @@ export const api = {
       .select('*')
       .order('id_modulo');
 
-    if (moduleError) {
-      console.error('Error fetching modules:', moduleError);
-      return [];
-    }
+    if (moduleError) return [];
 
     let userProgress: any[] = [];
     if (userId) {
@@ -485,10 +520,7 @@ export const api = {
       .eq('id_tema', topicId)
       .order('nombre_subtema');
 
-    if (error) {
-      console.error("Error fetching subtopics", error);
-      return [];
-    }
+    if (error) return [];
 
     return data.map((row: any) => ({
       id: row.id_subtema.toString(),
@@ -539,15 +571,11 @@ export const api = {
     if (subtopicId) {
         query = query.eq('id_subtema', subtopicId);
     } else {
-        query = query.limit(200); // Increased limit slightly to help search find things
+        query = query.limit(200); 
     }
 
     const { data, error } = await query;
-
-    if (error) {
-        console.error(error);
-        return [];
-    }
+    if (error) return [];
 
     return data.map((q: any) => ({
         id: q.id_pregunta.toString(),
@@ -580,7 +608,7 @@ export const api = {
           imageUrl: q.imagen_video,
           subtopicId: q.id_subtema,
           options: options.map((o: any) => ({
-              id: o.id_opcion, // Include ID for updates
+              id: o.id_opcion, 
               text: o.texto_opcion,
               isCorrect: o.es_correcta
           }))
@@ -618,7 +646,6 @@ export const api = {
   },
 
   updateQuestion: async (id: string, payload: { subtopicId: string, text: string, explanationCorrect: string, explanationIncorrect: string, imageUrl?: string, options: {id?: number, text: string, isCorrect: boolean}[] }) => {
-      // 1. Update Question Text
       const { error } = await supabase.from('Pregunta').update({
           id_subtema: payload.subtopicId,
           texto_pregunta: payload.text,
@@ -630,17 +657,14 @@ export const api = {
       
       if (error) throw error;
 
-      // 2. Update Options (Iterate through list)
       for (const opt of payload.options) {
           if (opt.id) {
-              // Update existing option
                await supabase.from('Opcions').update({
                   texto_opcion: opt.text,
                   es_correcta: opt.isCorrect,
                   updatedAt: new Date()
               }).eq('id_opcion', opt.id);
           } else if (opt.text.trim() !== '') {
-              // Insert new option if user added one during edit
               await supabase.from('Opcions').insert({
                   id_pregunta: parseInt(id),
                   texto_opcion: opt.text,
@@ -741,9 +765,7 @@ export const api = {
 
       const { error } = await supabase.from('user_answers').insert(payload);
       
-      if (error) {
-          console.warn("Could not save detailed question history.", error);
-      }
+      if (error) console.warn("Could not save detailed question history.", error);
   },
 
   getUserStats: async (userId: string): Promise<UserStats> => {
@@ -789,18 +811,11 @@ export const api = {
         imagen_video,
         id_subtema,
         Subtemas ( id_tema ),
-        Opcions (
-            id_opcion,
-            texto_opcion,
-            es_correcta
-        )
+        Opcions (id_opcion, texto_opcion, es_correcta)
       `)
       .in('id_subtema', subtopicIds);
 
-    if (qError) {
-      console.error(qError);
-      return [];
-    }
+    if (qError) return [];
 
     return questionsData.map((q: any) => {
         const rawOptions = q.Opcions || [];
@@ -868,32 +883,9 @@ export const api = {
   // --- NEWS & NOVEDADES ---
   
   getNews: async (): Promise<NewsPost[]> => {
-      // Mock data in case DB table doesn't exist yet
+      // Fallback
       const MOCK_NEWS: NewsPost[] = [
-          { 
-              id: '1', 
-              title: '¡Ingreso Top 10!', 
-              studentName: 'Sofia Martinez', 
-              message: 'Gracias a AnatoPlus pude organizar mis tiempos y repasar los temas más difíciles. ¡Logré el puesto 5!', 
-              imageUrl: 'https://picsum.photos/id/64/200/200', 
-              date: '2023-12-15' 
-          },
-          { 
-              id: '2', 
-              title: 'Examen Final Aprobado', 
-              studentName: 'Juan Carlos D.', 
-              message: 'Las preguntas de neuroanatomía son idénticas a las del examen. 100% recomendado.', 
-              imageUrl: 'https://picsum.photos/id/91/200/200', 
-              date: '2024-01-20' 
-          },
-          {
-              id: '3',
-              title: 'Mejoré mi promedio',
-              studentName: 'Andrea B.',
-              message: 'Pasé de aplazarme a sacar un 4 en el final. La práctica hace al maestro.',
-              imageUrl: 'https://picsum.photos/id/129/200/200', 
-              date: '2024-02-10'
-          }
+          { id: '1', title: '¡Ingreso Top 10!', studentName: 'Sofia Martinez', message: 'Gracias a AnatoPlus pude organizar mis tiempos...', imageUrl: 'https://picsum.photos/id/64/200/200', date: '2023-12-15' },
       ];
 
       if (!USE_DATABASE) return MOCK_NEWS;
@@ -903,10 +895,7 @@ export const api = {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error || !data) {
-          // Fallback if table doesn't exist
-          return MOCK_NEWS;
-      }
+      if (error || !data) return MOCK_NEWS;
 
       return data.map((n: any) => ({
           id: n.id.toString(),
@@ -919,14 +908,14 @@ export const api = {
   },
 
   uploadNewsImage: async (file: File): Promise<string> => {
-      if (!USE_DATABASE) return URL.createObjectURL(file); // Mock fallback
+      if (!USE_DATABASE) return URL.createObjectURL(file);
 
       const fileExt = file.name.split('.').pop();
       const fileName = `news-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('news-images') // User needs to create this bucket
+        .from('news-images') 
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;

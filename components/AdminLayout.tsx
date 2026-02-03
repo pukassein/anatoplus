@@ -11,7 +11,8 @@ import {
   X,
   ChevronLeft,
   BookOpen,
-  Megaphone
+  Megaphone,
+  PieChart
 } from 'lucide-react';
 import { User, ViewState } from '../types';
 
@@ -103,6 +104,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
           <NavItem view={ViewState.ADMIN_QUESTIONS} label="Preguntas" icon={HelpCircle} />
           <NavItem view={ViewState.ADMIN_USERS} label="Usuarios" icon={Users} />
           <NavItem view={ViewState.ADMIN_PAYMENTS} label="Pagos" icon={Wallet} />
+          <NavItem view={ViewState.ADMIN_FINANCES} label="Finanzas" icon={PieChart} />
           <NavItem view={ViewState.ADMIN_NEWS} label="Novedades" icon={Megaphone} />
           <NavItem view={ViewState.ADMIN_PLANS} label="Planes" icon={CreditCard} />
           <NavItem view={ViewState.ADMIN_COMMENTS} label="Comentarios" icon={MessageSquare} />
@@ -170,6 +172,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
                {currentView === ViewState.ADMIN_COMMENTS && 'Comentarios'}
                {currentView === ViewState.ADMIN_PLANS && 'Planes y Precios'}
                {currentView === ViewState.ADMIN_PAYMENTS && 'Solicitudes de Pago'}
+               {currentView === ViewState.ADMIN_FINANCES && 'Finanzas y Gastos'}
                {currentView === ViewState.ADMIN_NEWS && 'Novedades y Testimonios'}
              </h1>
            </div>

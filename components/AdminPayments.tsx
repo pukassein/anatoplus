@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { PaymentRequest, BankDetails } from '../types';
-import { Loader2, CheckCircle, XCircle, Calendar, User, CreditCard, X, Eye, Settings } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Calendar, User, CreditCard, X, Eye, Settings, AlertTriangle, ArrowRight } from 'lucide-react';
 
 const AdminPayments: React.FC = () => {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
@@ -13,6 +13,10 @@ const AdminPayments: React.FC = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [bankForm, setBankForm] = useState<BankDetails>({ bankName: '', accountName: '', alias: '', pixKey: '' });
     const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+    // Approval Modal State
+    const [approvalRequest, setApprovalRequest] = useState<PaymentRequest | null>(null);
+    const [approvalForm, setApprovalForm] = useState({ finalPrice: '', notes: '' });
 
     const fetchRequests = async () => {
         setIsLoading(true);
@@ -57,17 +61,50 @@ const AdminPayments: React.FC = () => {
         }
     };
 
-    const handleProcess = async (req: PaymentRequest, status: 'approved' | 'rejected') => {
-        if (!confirm(`¿Estás seguro de ${status === 'approved' ? 'APROBAR' : 'RECHAZAR'} este pago?`)) return;
+    // Open Modal for Approval
+    const initiateApproval = (req: PaymentRequest) => {
+        setApprovalRequest(req);
+        setApprovalForm({
+            finalPrice: (req.planPrice || 0).toString(),
+            notes: ''
+        });
+    };
+
+    const handleConfirmApproval = async () => {
+        if (!approvalRequest) return;
+        
+        const price = parseInt(approvalForm.finalPrice);
+        if (isNaN(price)) return alert("El monto debe ser un número.");
+
+        setProcessingId(approvalRequest.id);
+        try {
+            await api.processPayment(
+                approvalRequest.id, 
+                approvalRequest.userId, 
+                approvalRequest.planId, 
+                'approved',
+                price,
+                approvalForm.notes
+            );
+            fetchRequests();
+            setApprovalRequest(null);
+        } catch (e) {
+            alert("Error procesando aprobación.");
+            console.error(e);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleReject = async (req: PaymentRequest) => {
+        if (!confirm(`¿Rechazar este pago de ${req.userName}?`)) return;
         
         setProcessingId(req.id);
         try {
-            await api.processPayment(req.id, req.userId, req.planId, status);
-            // Refresh list
+            await api.processPayment(req.id, req.userId, req.planId, 'rejected');
             fetchRequests();
         } catch (e) {
-            alert("Error procesando la solicitud.");
-            console.error(e);
+            alert("Error al rechazar.");
         } finally {
             setProcessingId(null);
         }
@@ -121,6 +158,7 @@ const AdminPayments: React.FC = () => {
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Usuario</th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Plan Solicitado</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Monto Real</th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fecha</th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Estado</th>
                                 <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Comprobante</th>
@@ -128,71 +166,128 @@ const AdminPayments: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {requests.map(req => (
-                                <tr key={req.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                                <User size={16} />
+                            {requests.map(req => {
+                                const displayPrice = req.finalPrice !== undefined ? req.finalPrice : req.planPrice;
+                                return (
+                                    <tr key={req.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                                                    <User size={16} />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-900">{req.userName || 'Usuario'}</div>
+                                                    <div className="text-xs text-gray-500">{req.userEmail}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-gray-900">{req.userName || 'Usuario'}</div>
-                                                <div className="text-xs text-gray-500">{req.userEmail}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
+                                                    <CreditCard size={16} className="text-gray-400" />
+                                                    {req.planName || 'Plan desconocido'}
+                                                </div>
+                                                {req.notes && <span className="text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded w-fit mt-1">{req.notes}</span>}
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                                            <CreditCard size={16} className="text-gray-400" />
-                                            {req.planName || 'Plan desconocido'}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar size={14} />
-                                            {new Date(req.createdAt).toLocaleDateString()}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {getStatusBadge(req.status)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button 
-                                            onClick={() => setSelectedProof(req.proofUrl)}
-                                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center justify-end gap-1"
-                                        >
-                                            <Eye size={16} /> Ver
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        {req.status === 'pending' && (
-                                            <div className="flex justify-end gap-2">
-                                                <button 
-                                                    onClick={() => handleProcess(req, 'approved')}
-                                                    disabled={!!processingId}
-                                                    className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
-                                                    title="Aprobar"
-                                                >
-                                                    <CheckCircle size={18} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleProcess(req, 'rejected')}
-                                                    disabled={!!processingId}
-                                                    className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
-                                                    title="Rechazar"
-                                                >
-                                                    <XCircle size={18} />
-                                                </button>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`text-sm font-bold ${displayPrice === 0 ? 'text-gray-400' : 'text-green-600'}`}>
+                                                Gs. {(displayPrice || 0).toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar size={14} />
+                                                {new Date(req.createdAt).toLocaleDateString()}
                                             </div>
-                                        )}
-                                        {req.status !== 'pending' && <span className="text-gray-400 text-xs">-</span>}
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {getStatusBadge(req.status)}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                onClick={() => setSelectedProof(req.proofUrl)}
+                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center justify-end gap-1"
+                                            >
+                                                <Eye size={16} /> Ver
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {req.status === 'pending' && (
+                                                <div className="flex justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => initiateApproval(req)}
+                                                        disabled={!!processingId}
+                                                        className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
+                                                        title="Aprobar (Configurar)"
+                                                    >
+                                                        <CheckCircle size={18} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleReject(req)}
+                                                        disabled={!!processingId}
+                                                        className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+                                                        title="Rechazar"
+                                                    >
+                                                        <XCircle size={18} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {req.status !== 'pending' && <span className="text-gray-400 text-xs">-</span>}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {/* Approval Modal */}
+            {approvalRequest && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col">
+                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                            <h3 className="font-bold text-gray-900">Confirmar Aprobación</h3>
+                            <button onClick={() => setApprovalRequest(null)}><X size={20} className="text-gray-500" /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm text-blue-800 flex gap-2">
+                                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                                <p>Estás a punto de activar el plan <strong>{approvalRequest.planName}</strong> para <strong>{approvalRequest.userName}</strong>.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Monto Real a Cobrar (Gs.)</label>
+                                <input 
+                                    type="number"
+                                    className="w-full border border-gray-300 rounded-lg p-2 font-bold text-lg text-green-700 outline-none focus:ring-2 focus:ring-green-200"
+                                    value={approvalForm.finalPrice}
+                                    onChange={(e) => setApprovalForm({...approvalForm, finalPrice: e.target.value})}
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Coloca "0" si es una beca o convenio.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Notas / Convenio</label>
+                                <input 
+                                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                                    placeholder="Ej. Aval Cursillo"
+                                    value={approvalForm.notes}
+                                    onChange={(e) => setApprovalForm({...approvalForm, notes: e.target.value})}
+                                />
+                            </div>
+
+                            <button 
+                                onClick={handleConfirmApproval}
+                                className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm flex items-center justify-center gap-2"
+                            >
+                                Confirmar y Activar <ArrowRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Image Modal */}
             {selectedProof && (
