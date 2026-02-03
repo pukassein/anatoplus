@@ -128,6 +128,23 @@ export const api = {
       }
   },
 
+  adminAssignPlan: async (userId: string, planId: string, finalPrice: number, notes: string) => {
+      // 1. Create approved payment record so it shows in finances
+      const { error: payError } = await supabase.from('payment_requests').insert([{
+          user_id: userId,
+          plan_id: parseInt(planId),
+          status: 'approved',
+          final_price: finalPrice,
+          notes: notes,
+          proof_url: 'manual_admin_assignment'
+      }]);
+      
+      if (payError) throw payError;
+
+      // 2. Update active profile
+      await api.updateUserPlan(userId, planId);
+  },
+
   // --- PAYMENTS & PLANS ---
 
   getBankDetails: async (): Promise<BankDetails> => {
