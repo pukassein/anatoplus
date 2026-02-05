@@ -16,6 +16,15 @@ const Login: React.FC = () => {
   const [birthDate, setBirthDate] = useState('');
   const [affiliation, setAffiliation] = useState('');
 
+  // Helper to translate Supabase errors
+  const getFriendlyErrorMessage = (msg: string) => {
+      if (msg.includes("Email not confirmed")) return "Tu correo no ha sido confirmado. Revisa tu bandeja de entrada o spam.";
+      if (msg.includes("Invalid login credentials")) return "Correo o contraseña incorrectos.";
+      if (msg.includes("User already registered")) return "Este correo ya está registrado. Intenta iniciar sesión.";
+      if (msg.includes("Password should be")) return "La contraseña es muy débil.";
+      return msg;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -30,8 +39,16 @@ const Login: React.FC = () => {
         if (!birthDate) throw new Error("La fecha de nacimiento es obligatoria");
         if (!affiliation.trim()) throw new Error("La universidad/afiliación es obligatoria");
 
-        await api.auth.signUp(email, password, name, birthDate, affiliation);
+        const response = await api.auth.signUp(email, password, name, birthDate, affiliation);
         
+        // If Supabase "Confirm Email" is disabled, response.session will be present immediately.
+        // If it is present, we don't need to show the "Check Email" screen.
+        if (response.session) {
+            // Auto-login successful, the App.tsx listener will handle the redirect.
+            return;
+        }
+
+        // If no session, it means Email Confirmation is ENABLED in Supabase, show instruction.
         setShowSuccessMessage(true);
       } else {
         await api.auth.signIn(email, password);
@@ -39,7 +56,7 @@ const Login: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Ocurrió un error. Verifica tus credenciales.");
+      setError(getFriendlyErrorMessage(err.message || "Ocurrió un error. Verifica tus credenciales."));
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +69,7 @@ const Login: React.FC = () => {
       // Reset form if desired, but keeping values is often better UX
   };
 
-  // SUCCESS CONFIRMATION VIEW
+  // SUCCESS CONFIRMATION VIEW (Only shown if Supabase requires confirmation)
   if (showSuccessMessage) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 dark:from-slate-900 dark:to-slate-800">
