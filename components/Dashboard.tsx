@@ -198,6 +198,62 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
+      {/* Premium Preparation Section */}
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          {/* Simulados Pre Parcial */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Lock size={120} />
+            </div>
+            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+              PRÓXIMAMENTE
+            </div>
+            
+            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
+               <Award size={32} className="text-indigo-100" />
+            </div>
+            
+            <div className="z-10 flex-1 text-center md:text-left">
+              <h3 className="text-xl font-bold mb-2">Simulados Pre Parcial</h3>
+              <p className="text-indigo-100 text-sm mb-4">
+                Pon a prueba tus conocimientos con exámenes cronometrados diseñados para simular la experiencia real.
+              </p>
+              <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
+                <Lock size={16} />
+                No Disponible
+              </button>
+            </div>
+          </div>
+
+          {/* Clase de Repaso */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <PlayCircle size={120} />
+            </div>
+            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+              PRÓXIMAMENTE
+            </div>
+            
+            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
+               <TrendingUp size={32} className="text-emerald-100" />
+            </div>
+            
+            <div className="z-10 flex-1 text-center md:text-left">
+              <h3 className="text-xl font-bold mb-2">Clase de Repaso</h3>
+              <p className="text-emerald-100 text-sm mb-4">
+                Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
+              </p>
+              <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
+                <Lock size={16} />
+                No Disponible
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Modules Grid */}
       <div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Explorar Módulos</h2>
@@ -258,6 +314,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
           ))}
+
+
         </div>
       </div>
 
