@@ -247,7 +247,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
         return (
             <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nombre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
                 {modules.filter(m => m.title.toLowerCase().includes(searchTerm.toLowerCase())).map(m => (
                 <tr key={m.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">{m.title}</td>
@@ -265,7 +265,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
         return (
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Módulo</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
               {topics.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
                 <tr key={t.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">{t.name}</td>
@@ -284,7 +284,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
         return (
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Subtema</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Tema Padre</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
               {subtopics.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
                 <tr key={s.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">{s.name}</td>
@@ -308,7 +308,7 @@ const AdminModules: React.FC<AdminModulesProps> = ({
       return (
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Pregunta</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Explicación (Prev)</th><th className="px-6 py-3 text-right">Acción</th></tr></thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
             {filteredQuestions.length > 0 ? (
                 filteredQuestions.map(q => (
                 <tr key={q.id} className="hover:bg-gray-50">
