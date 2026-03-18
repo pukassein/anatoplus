@@ -428,7 +428,7 @@ const AdminFinances: React.FC = () => {
                                     <th className="px-2 py-3"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 text-gray-900">
                                 {/* 1. Student Payments */}
                                 {payments.map(p => {
                                     const amount = p.finalPrice !== undefined ? p.finalPrice : (p.planPrice || 0);

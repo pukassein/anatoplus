@@ -165,7 +165,7 @@ const AdminPayments: React.FC = () => {
                                 <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Acción</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200 text-gray-900">
                             {requests.map(req => {
                                 const displayPrice = req.finalPrice !== undefined ? req.finalPrice : req.planPrice;
                                 return (

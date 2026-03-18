@@ -149,7 +149,7 @@ const AdminUsers: React.FC = () => {
                     <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acción</th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
                     {filteredUsers.length > 0 ? (
                         filteredUsers.map(user => (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
