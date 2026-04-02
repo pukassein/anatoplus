@@ -61,6 +61,21 @@ export const api = {
       if (error) throw error;
     },
 
+    resetPassword: async (email: string) => {
+      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      if (error) throw error;
+    },
+
+    updatePassword: async (newPassword: string) => {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (error) throw error;
+    },
+
     getUserProfile: async (userId: string) => {
       if (!USE_DATABASE) return { role: 'student', full_name: 'Test User', isActive: true };
       

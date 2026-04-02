@@ -4,7 +4,9 @@ import { api } from '../services/api';
 
 const Login: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showForgotPasswordSuccess, setShowForgotPasswordSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +25,25 @@ const Login: React.FC = () => {
       if (msg.includes("User already registered")) return "Este correo ya está registrado. Intenta iniciar sesión.";
       if (msg.includes("Password should be")) return "La contraseña es muy débil.";
       return msg;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!email) {
+      setError("Ingresa tu correo electrónico para recuperar la contraseña.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await api.auth.resetPassword(email);
+      setShowForgotPasswordSuccess(true);
+    } catch (err: any) {
+      console.error(err);
+      setError(getFriendlyErrorMessage(err.message || "Ocurrió un error al enviar el correo."));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,8 +85,10 @@ const Login: React.FC = () => {
 
   const handleSwitchMode = () => {
       setIsSignUp(!isSignUp); 
+      setIsForgotPassword(false);
       setError(null); 
       setShowSuccessMessage(false);
+      setShowForgotPasswordSuccess(false);
       // Reset form if desired, but keeping values is often better UX
   };
 
@@ -86,6 +109,28 @@ const Login: React.FC = () => {
                 </div>
                 <button
                     onClick={() => { setShowSuccessMessage(false); setIsSignUp(false); }}
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                    <ArrowLeft size={18} /> Volver al Inicio de Sesión
+                </button>
+            </div>
+        </div>
+      );
+  }
+
+  if (showForgotPasswordSuccess) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 dark:from-slate-900 dark:to-slate-800">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden p-8 text-center animate-fade-in-up dark:bg-slate-800 dark:border dark:border-slate-700">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-green-900/30">
+                    <CheckCircle className="text-green-600 dark:text-green-400" size={40} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">¡Correo Enviado!</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed dark:text-gray-300">
+                    Hemos enviado un enlace para recuperar tu contraseña a <br/> <span className="font-semibold text-gray-800 dark:text-gray-100">{email}</span>.
+                </p>
+                <button
+                    onClick={() => { setShowForgotPasswordSuccess(false); setIsForgotPassword(false); setIsSignUp(false); }}
                     className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                     <ArrowLeft size={18} /> Volver al Inicio de Sesión
@@ -144,10 +189,10 @@ const Login: React.FC = () => {
 
           <div className="mb-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">
-              {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+              {isForgotPassword ? 'Recuperar Contraseña' : isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
             </h3>
             <p className="text-gray-500 text-sm dark:text-gray-400">
-              {isSignUp ? 'Completa todos los campos.' : 'Ingresa tu correo y contraseña.'}
+              {isForgotPassword ? 'Ingresa tu correo para recibir un enlace de recuperación.' : isSignUp ? 'Completa todos los campos.' : 'Ingresa tu correo y contraseña.'}
             </p>
           </div>
 
@@ -158,9 +203,9 @@ const Login: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
             
-            {isSignUp && (
+            {!isForgotPassword && isSignUp && (
                 <>
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Nombre Completo</label>
@@ -225,41 +270,56 @@ const Login: React.FC = () => {
                 </div>
             </div>
 
-            <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Contraseña</label>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    />
-                </div>
-            </div>
-
-            {isSignUp && (
+            {!isForgotPassword && (
+              <>
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Confirmar Contraseña</label>
+                    <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Contraseña</label>
+                        {!isSignUp && (
+                            <button
+                                type="button"
+                                onClick={() => { setIsForgotPassword(true); setError(null); }}
+                                className="text-xs font-bold text-amber-600 hover:underline focus:outline-none dark:text-amber-400"
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </button>
+                        )}
+                    </div>
                     <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="password"
                             required
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
-                            className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 outline-none transition-all dark:bg-slate-700 dark:text-white ${
-                                confirmPassword && password !== confirmPassword ? 'border-red-300 focus:border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
-                            }`}
+                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                         />
                     </div>
-                    {confirmPassword && password !== confirmPassword && (
-                        <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
-                    )}
                 </div>
+
+                {isSignUp && (
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase dark:text-gray-400">Confirmar Contraseña</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="password"
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 outline-none transition-all dark:bg-slate-700 dark:text-white ${
+                                    confirmPassword && password !== confirmPassword ? 'border-red-300 focus:border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
+                                }`}
+                            />
+                        </div>
+                        {confirmPassword && password !== confirmPassword && (
+                            <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
+                        )}
+                    </div>
+                )}
+              </>
             )}
 
             <button
@@ -271,7 +331,7 @@ const Login: React.FC = () => {
                   <Loader2 className="animate-spin" size={20} />
               ) : (
                   <>
-                    <span>{isSignUp ? 'Registrarse' : 'Entrar'}</span>
+                    <span>{isForgotPassword ? 'Enviar Enlace' : isSignUp ? 'Registrarse' : 'Entrar'}</span>
                     <ArrowRight size={20} />
                   </>
               )}
@@ -280,12 +340,20 @@ const Login: React.FC = () => {
 
           <div className="mt-6 text-center pt-6 border-t border-gray-100 dark:border-slate-700">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?'}
+              {isForgotPassword ? '¿Recordaste tu contraseña?' : isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?'}
               <button 
-                onClick={handleSwitchMode}
+                type="button"
+                onClick={() => {
+                  if (isForgotPassword) {
+                    setIsForgotPassword(false);
+                    setError(null);
+                  } else {
+                    handleSwitchMode();
+                  }
+                }}
                 className="ml-2 font-bold text-amber-600 hover:underline focus:outline-none dark:text-amber-400"
               >
-                {isSignUp ? 'Inicia Sesión' : 'Regístrate'}
+                {isForgotPassword ? 'Inicia Sesión' : isSignUp ? 'Inicia Sesión' : 'Regístrate'}
               </button>
             </p>
           </div>

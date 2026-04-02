@@ -12,6 +12,7 @@ import AdminPlans from './components/AdminPlans';
 import AdminPayments from './components/AdminPayments'; 
 import AdminNews from './components/AdminNews'; 
 import AdminFinances from './components/AdminFinances'; // New import
+import UpdatePassword from './components/UpdatePassword';
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
 import QuizView from './components/QuizView';
@@ -60,8 +61,18 @@ const App: React.FC = () => {
     });
 
     // 2. Listen for auth changes (SignIn, SignOut, Token Refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setCurrentView(ViewState.UPDATE_PASSWORD);
+        setIsAuthChecking(false);
+        return;
+      }
       if (session) {
+        // If we are already in UPDATE_PASSWORD view, don't change the view to dashboard
+        if (viewRef.current === ViewState.UPDATE_PASSWORD) {
+            setIsAuthChecking(false);
+            return;
+        }
         fetchProfileAndSetUser(session.user.id, session.user.email!);
       } else {
         setUser(null);
@@ -372,6 +383,16 @@ const App: React.FC = () => {
 
   if (isAuthChecking) {
     return <LoadingOverlay />;
+  }
+
+  if (currentView === ViewState.UPDATE_PASSWORD) {
+    return <UpdatePassword onComplete={() => {
+      if (user) {
+        fetchProfileAndSetUser(user.id, user.email);
+      } else {
+        setCurrentView(ViewState.LOGIN);
+      }
+    }} />;
   }
 
   if (!user || currentView === ViewState.LOGIN) {
