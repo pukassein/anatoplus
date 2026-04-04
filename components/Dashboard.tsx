@@ -48,6 +48,20 @@ const Dashboard: React.FC<DashboardProps> = ({
     ? Math.round(modules.reduce((acc, m) => acc + m.progress, 0) / modules.length)
     : 0;
 
+  // Simulado Logic
+  const isPremium = user.role === 'admin' || (user.planId && user.planId > 1);
+  
+  // Fechas del simulado (Hora de Paraguay UTC-4)
+  // Inicio: 12 de Mayo de 2026, 18:00 hs (22:00 UTC)
+  // Fin: 12 de Mayo de 2026, 19:00 hs (23:00 UTC)
+  // Para pruebas, si es admin, siempre está disponible.
+  const simuladoStartTime = new Date('2026-05-12T22:00:00Z');
+  const simuladoEndTime = new Date('2026-05-12T23:00:00Z');
+  const now = new Date();
+  
+  const isSimuladoTime = now >= simuladoStartTime && now <= simuladoEndTime;
+  const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
+
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
   const radarData = modules.slice(0, 6).map(m => ({
     subject: m.title.length > 12 ? m.title.substring(0, 9) + '...' : m.title,
@@ -203,13 +217,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Simulados Pre Parcial */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6">
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
             <div className="absolute top-0 right-0 p-3 opacity-10">
-              <Lock size={120} />
+              {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
             </div>
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-              PRÓXIMAMENTE
-            </div>
+            {!canAccessSimulado && (
+              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+                {isPremium ? 'PRÓXIMAMENTE' : 'PREMIUM'}
+              </div>
+            )}
             
             <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
                <Award size={32} className="text-indigo-100" />
@@ -220,10 +236,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-indigo-100 text-sm mb-4">
                 Pon a prueba tus conocimientos con exámenes cronometrados diseñados para simular la experiencia real.
               </p>
-              <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
-                <Lock size={16} />
-                No Disponible
-              </button>
+              {canAccessSimulado ? (
+                <button className="bg-white text-indigo-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-indigo-50 flex items-center justify-center gap-2 w-full md:w-auto">
+                  <PlayCircle size={16} />
+                  Ingresar al Simulado
+                </button>
+              ) : (
+                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
+                  <Lock size={16} />
+                  {isPremium ? 'Disponible el 12 de Mayo, 18:00 hs' : 'Solo para usuarios Premium'}
+                </button>
+              )}
             </div>
           </div>
 

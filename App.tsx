@@ -13,6 +13,7 @@ import AdminPayments from './components/AdminPayments';
 import AdminNews from './components/AdminNews'; 
 import AdminFinances from './components/AdminFinances'; // New import
 import UpdatePassword from './components/UpdatePassword';
+import SimuladoView from './components/SimuladoView';
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
 import QuizView from './components/QuizView';
@@ -266,6 +267,11 @@ const App: React.FC = () => {
   };
 
   const handleStartCustomSession = async (moduleIds: string[], isRandom: boolean) => {
+    if (moduleIds.length === 1 && moduleIds[0] === 'simulado') {
+      setCurrentView(ViewState.SIMULADO);
+      return;
+    }
+
     setIsLoading(true);
     try {
       let gatheredQuestions = await api.getQuestionsFromModules(moduleIds);
@@ -459,6 +465,13 @@ const App: React.FC = () => {
 
       {currentView === ViewState.SUBSCRIPTION && (
           <SubscriptionPlans 
+             user={user} 
+             onBack={() => setCurrentView(ViewState.DASHBOARD)} 
+          />
+      )}
+
+      {currentView === ViewState.SIMULADO && (
+          <SimuladoView 
              user={user} 
              onBack={() => setCurrentView(ViewState.DASHBOARD)} 
           />
