@@ -54,7 +54,7 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                ANATOPLUS divulgará la matriz con los comentarios en las historias de Instagram en @anatoplus.py a las 19:15 hs el 12 de mayo de 2026.
+                ANATOPLUS divulgará la matriz con los comentarios en las historias de Instagram en @anatoplus.py a las 19:15 hs el 19 de abril de 2026.
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>

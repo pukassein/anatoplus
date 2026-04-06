@@ -52,11 +52,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isPremium = user.role === 'admin' || (user.planId && user.planId > 1);
   
   // Fechas del simulado (Hora de Paraguay UTC-4)
-  // Inicio: 12 de Mayo de 2026, 18:00 hs (22:00 UTC)
-  // Fin: 12 de Mayo de 2026, 19:00 hs (23:00 UTC)
+  // Inicio: 19 de Abril de 2026, 18:00 hs (22:00 UTC)
+  // Fin: 19 de Abril de 2026, 19:00 hs (23:00 UTC)
   // Para pruebas, si es admin, siempre está disponible.
-  const simuladoStartTime = new Date('2026-05-12T22:00:00Z');
-  const simuladoEndTime = new Date('2026-05-12T23:00:00Z');
+  const simuladoStartTime = new Date('2026-04-19T22:00:00Z');
+  const simuladoEndTime = new Date('2026-04-19T23:00:00Z');
   const now = new Date();
   
   const isSimuladoTime = now >= simuladoStartTime && now <= simuladoEndTime;
@@ -244,7 +244,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               ) : (
                 <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
                   <Lock size={16} />
-                  {isPremium ? 'Disponible el 12 de Mayo, 18:00 hs' : 'Solo para usuarios Premium'}
+                  {isPremium ? 'Disponible el 19 de Abril, 18:00 hs' : 'Solo para usuarios Premium'}
                 </button>
               )}
             </div>
