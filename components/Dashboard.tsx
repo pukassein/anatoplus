@@ -217,13 +217,22 @@ const Dashboard: React.FC<DashboardProps> = ({
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Simulados Pre Parcial */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
             <div className="absolute top-0 right-0 p-3 opacity-10">
               {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
             </div>
             {!canAccessSimulado && (
               <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
                 {isPremium ? 'PRÓXIMAMENTE' : 'PREMIUM'}
+              </div>
+            )}
+            
+            {/* Tooltip for upcoming date */}
+            {!canAccessSimulado && isPremium && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2">
+                <Award size={14} />
+                ¡Prepárate! El simulado se habilitará el 19 de Abril a las 18:00 hs.
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45"></div>
               </div>
             )}
             

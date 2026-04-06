@@ -56,10 +56,15 @@
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
       }
+      @keyframes pulseSlow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+      }
       
       .animate-fade-in { animation: fadeIn 0.5s ease-out; }
       .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
       .animate-scale-up { animation: scaleUp 0.3s ease-out; }
+      .animate-pulse-slow { animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
   <script type="importmap">
 {
@@ -73,6 +78,7 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-gray-100 transition-colors duration-300">
     <div id="root"></div>
