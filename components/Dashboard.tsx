@@ -52,15 +52,24 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isPremium = user.role === 'admin' || (user.planId && user.planId > 1);
   
   // Fechas del simulado (Hora de Paraguay UTC-4)
-  // Inicio: 19 de Abril de 2026, 18:00 hs (22:00 UTC)
-  // Fin: 19 de Abril de 2026, 19:00 hs (23:00 UTC)
+  // Inicio: 19 de Abril de 2026, 20:00 hs (00:00 UTC del 20 de Abril)
+  // Fin: 19 de Abril de 2026, 21:00 hs (01:00 UTC del 20 de Abril)
   // Para pruebas, si es admin, siempre está disponible.
-  const simuladoStartTime = new Date('2026-04-19T22:00:00Z');
-  const simuladoEndTime = new Date('2026-04-19T23:00:00Z');
+  const simuladoStartTime = new Date('2026-04-20T00:00:00Z');
+  const simuladoEndTime = new Date('2026-04-20T01:00:00Z');
   const now = new Date();
   
   const isSimuladoTime = now >= simuladoStartTime && now <= simuladoEndTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
+
+  // Modal recordatorio
+  const shouldShowReminder = isPremium && now < simuladoStartTime && localStorage.getItem('simuladoReminderDismissed_1') !== 'true';
+  const [showSimuladoReminder, setShowSimuladoReminder] = useState(shouldShowReminder);
+
+  const dismissReminder = () => {
+    localStorage.setItem('simuladoReminderDismissed_1', 'true');
+    setShowSimuladoReminder(false);
+  };
 
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
   const radarData = modules.slice(0, 6).map(m => ({
@@ -231,7 +240,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {!canAccessSimulado && isPremium && (
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2">
                 <Award size={14} />
-                ¡Prepárate! El simulado se habilitará el 19 de Abril a las 18:00 hs.
+                ¡Prepárate! El simulado se habilitará el 19 de Abril a las 20:00 hs.
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45"></div>
               </div>
             )}
@@ -253,7 +262,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               ) : (
                 <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
                   <Lock size={16} />
-                  {isPremium ? 'Disponible el 19 de Abril, 18:00 hs' : 'Solo para usuarios Premium'}
+                  {isPremium ? 'Disponible el 19 de Abril, 20:00 hs' : 'Solo para usuarios Premium'}
                 </button>
               )}
             </div>
@@ -353,6 +362,30 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* NEW: News Feed Section at the bottom */}
       <NewsFeed />
+
+      {/* Reminder Popup for Simulado */}
+      {showSimuladoReminder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-amber-400">
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-amber-900/30">
+              <Award className="text-amber-500 w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡No te olvides!</h3>
+            <p className="text-gray-600 mb-6 dark:text-gray-300">
+              El <strong>Simulado Pre Parcial</strong> será este <br />
+              <span className="text-amber-600 font-bold dark:text-amber-400 text-lg block mt-1">19 de Abril a las 20:00 hs</span>
+              <br />
+              ¡Prepárate y llega a tiempo para evaluar tus conocimientos!
+            </p>
+            <button 
+              onClick={dismissReminder}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm"
+            >
+              ¡Entendido, estaré ahí!
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Study Configuration Modal */}
       {isModalOpen && (

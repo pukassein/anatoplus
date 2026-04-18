@@ -11,6 +11,11 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
   // Configuración del Simulado
   const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfM3-8Tl8clgEAH-4NxOY1C5XDNmBrWFhgHSXwTur81fZREJw/viewform";
   const pdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO.pdf";
+  const answersPdfUrl = ""; // TODO: Reemplazar con URL de las respuestas explicadas
+  
+  const now = new Date();
+  const simuladoEndTime = new Date('2026-04-20T01:00:00Z'); // Fin del simulado: 21:00 hs UTC-4
+  const showAnswers = now > simuladoEndTime || user.role === 'admin';
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 animate-fade-in">
@@ -46,15 +51,15 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                El examen tendrá una duración máxima de 1 hora. Los participantes tendrán desde las 18:00 hs hasta las 19:00 hs para responder las preguntas y mandar las respuestas por medio del formulario electrónico.
+                El examen tendrá una duración máxima de 1 hora. Los participantes tendrán desde las 20:00 hs hasta las 21:00 hs para responder las preguntas y mandar las respuestas por medio del formulario electrónico.
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                El formulario electrónico quedará disponible para enviar las respuestas durante toda la duración del examen (de 18:00 hs a 19:00 hs).
+                El formulario electrónico quedará disponible para enviar las respuestas durante toda la duración del examen (de 20:00 hs a 21:00 hs).
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                ANATOPLUS divulgará la matriz con los comentarios en las historias de Instagram en @anatoplus.py a las 19:15 hs el 19 de abril de 2026.
+                ANATOPLUS subirá un PDF con las respuestas explicadas en esta misma plataforma (estará disponible al finalizar el examen).
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
@@ -66,7 +71,7 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
           <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 dark:bg-indigo-900/20 dark:border-indigo-800">
             <h3 className="font-bold text-indigo-900 mb-2 dark:text-indigo-300">Enviar Respuestas</h3>
             <p className="text-sm text-indigo-700 mb-4 dark:text-indigo-400">
-              Usa este formulario para enviar tus respuestas antes de las 19:00 hs.
+              Usa este formulario para enviar tus respuestas antes de las 21:00 hs.
             </p>
             <a 
               href={formUrl}
@@ -78,6 +83,33 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
               Abrir Formulario
             </a>
           </div>
+
+          {/* Tarjeta de respuestas */}
+          <div className={`rounded-2xl p-6 border ${showAnswers ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800' : 'bg-gray-50 border-gray-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+            <h3 className={`font-bold mb-2 ${showAnswers ? 'text-amber-900 dark:text-amber-300' : 'text-gray-500 dark:text-gray-400'}`}>Respuestas Explicadas</h3>
+            {showAnswers ? (
+              <>
+                <p className="text-sm text-amber-700 mb-4 dark:text-amber-400">
+                  Ya puedes revisar las respuestas correctas y sus explicaciones.
+                </p>
+                <a 
+                  href={answersPdfUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  onClick={(e) => { if (!answersPdfUrl) { e.preventDefault(); alert("El PDF de respuestas aún no se ha subido. Por favor avísale al administrador."); } }}
+                >
+                  <FileText size={18} />
+                  Ver Respuestas
+                </a>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                El PDF con las explicaciones estará disponible aquí a las 21:00 hs al finalizar el examen.
+              </p>
+            )}
+          </div>
+
         </div>
 
         {/* Columna del PDF */}
