@@ -10,7 +10,7 @@ interface SimuladoViewProps {
 const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
   // Configuración del Simulado
   const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfM3-8Tl8clgEAH-4NxOY1C5XDNmBrWFhgHSXwTur81fZREJw/viewform";
-  const pdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO.pdf";
+  const pdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO_new1904.pdf";
   const answersPdfUrl = ""; // TODO: Reemplazar con URL de las respuestas explicadas
   
   const now = new Date();
