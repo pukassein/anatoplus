@@ -56,10 +56,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Fin: 19 de Abril de 2026, 21:00 hs (01:00 UTC del 20 de Abril)
   // Para pruebas, si es admin, siempre está disponible.
   const simuladoStartTime = new Date('2026-04-19T23:00:00Z');
-  const simuladoEndTime = new Date('2026-04-20T01:00:00Z');
   const now = new Date();
   
-  const isSimuladoTime = now >= simuladoStartTime && now <= simuladoEndTime;
+  // Liberate entirely after start time
+  const isSimuladoTime = now >= simuladoStartTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
 
   // Modal recordatorio

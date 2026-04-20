@@ -15,7 +15,7 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
   
   const now = new Date();
   const simuladoEndTime = new Date('2026-04-20T01:00:00Z'); // Fin del simulado: 21:00 hs UTC-4
-  const showAnswers = now > simuladoEndTime || user.role === 'admin';
+  const showAnswers = true; // Liberated for everyone at any time
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 animate-fade-in">
