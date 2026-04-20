@@ -11,7 +11,7 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
   // Configuración del Simulado
   const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfM3-8Tl8clgEAH-4NxOY1C5XDNmBrWFhgHSXwTur81fZREJw/viewform";
   const pdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO_new1904.pdf";
-  const answersPdfUrl = ""; // TODO: Reemplazar con URL de las respuestas explicadas
+  const answersPdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO_COMENTADO_AP1.pdf";
   
   const now = new Date();
   const simuladoEndTime = new Date('2026-04-20T01:00:00Z'); // Fin del simulado: 21:00 hs UTC-4

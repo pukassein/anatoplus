@@ -53,12 +53,20 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // 1. Check active session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Auth session error:", error);
+        // Usually, an Invalid Refresh Token means we need to clear everything
+        supabase.auth.signOut();
+        setIsAuthChecking(false);
+      } else if (session) {
         fetchProfileAndSetUser(session.user.id, session.user.email!);
       } else {
         setIsAuthChecking(false);
       }
+    }).catch(err => {
+      console.error("Unexpected session error:", err);
+      setIsAuthChecking(false);
     });
 
     // 2. Listen for auth changes (SignIn, SignOut, Token Refresh)
@@ -66,6 +74,14 @@ const App: React.FC = () => {
       if (event === 'PASSWORD_RECOVERY') {
         setCurrentView(ViewState.UPDATE_PASSWORD);
         setIsAuthChecking(false);
+        return;
+      }
+      if (event === 'SIGNED_OUT') {
+        // Clear local storage or anything else if needed
+        setUser(null);
+        setCurrentView(ViewState.LOGIN);
+        setIsAuthChecking(false);
+        setIsSessionConflict(false);
         return;
       }
       if (session) {
