@@ -9,7 +9,6 @@ interface SimuladoViewProps {
 
 const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
   // Configuración del Simulado
-  const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfM3-8Tl8clgEAH-4NxOY1C5XDNmBrWFhgHSXwTur81fZREJw/viewform";
   const pdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO_new1904.pdf";
   const answersPdfUrl = "https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/SIMULADO_COMENTADO_AP1.pdf";
   
@@ -69,19 +68,16 @@ const SimuladoView: React.FC<SimuladoViewProps> = ({ user, onBack }) => {
           </div>
 
           <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 dark:bg-indigo-900/20 dark:border-indigo-800">
-            <h3 className="font-bold text-indigo-900 mb-2 dark:text-indigo-300">Enviar Respuestas</h3>
+            <h3 className="font-bold text-indigo-900 mb-2 dark:text-indigo-300">Formulario de Respuestas Cerrado</h3>
             <p className="text-sm text-indigo-700 mb-4 dark:text-indigo-400">
-              Usa este formulario para enviar tus respuestas antes de las 21:00 hs.
+              El tiempo para enviar las respuestas ha finalizado. El formulario ya no acepta nuevas entregas.
             </p>
-            <a 
-              href={formUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md"
+            <div 
+              className="w-full bg-gray-400 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed shadow-md"
             >
-              <ExternalLink size={18} />
-              Abrir Formulario
-            </a>
+              <AlertTriangle size={18} />
+              Examen Finalizado
+            </div>
           </div>
 
           {/* Tarjeta de respuestas */}

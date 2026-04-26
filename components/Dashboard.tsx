@@ -64,13 +64,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isSimuladoTime = now >= simuladoStartTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
 
-  // Modal recordatorio
-  const shouldShowReminder = isPremium && now < simuladoStartTime && localStorage.getItem('simuladoReminderDismissed_1') !== 'true';
-  const [showSimuladoReminder, setShowSimuladoReminder] = useState(shouldShowReminder);
+  // Modal recordatorio - Clase de Repaso
+  const claseRepasoPopupEndTime = new Date('2026-04-28T23:59:59Z');
+  const shouldShowRepasoReminder = now < claseRepasoPopupEndTime && localStorage.getItem('repasoReminderDismissed_1') !== 'true';
+  const [showRepasoReminder, setShowRepasoReminder] = useState(shouldShowRepasoReminder);
 
-  const dismissReminder = () => {
-    localStorage.setItem('simuladoReminderDismissed_1', 'true');
-    setShowSimuladoReminder(false);
+  const dismissRepasoReminder = () => {
+    localStorage.setItem('repasoReminderDismissed_1', 'true');
+    setShowRepasoReminder(false);
   };
 
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
@@ -272,17 +273,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Clase de Repaso */}
           <div 
-            onClick={() => user.role === 'admin' && onViewClaseRepaso()}
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${user.role === 'admin' ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`}
+            onClick={() => onViewClaseRepaso()}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:shadow-xl transition-shadow"
           >
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <PlayCircle size={120} />
             </div>
-            {user.role !== 'admin' && (
-              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-                PRÓXIMAMENTE
-              </div>
-            )}
             
             <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
                <TrendingUp size={32} className="text-emerald-100" />
@@ -293,17 +289,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-emerald-100 text-sm mb-4">
                 Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
               </p>
-              {user.role === 'admin' ? (
-                <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full md:w-auto">
-                  <PlayCircle size={16} />
-                  Ingresar a la Clase
-                </button>
-              ) : (
-                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
-                  <Lock size={16} />
-                  No Disponible
-                </button>
-              )}
+              <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full md:w-auto">
+                <PlayCircle size={16} />
+                Ingresar a la Clase
+              </button>
             </div>
           </div>
         </div>
@@ -377,25 +366,34 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* NEW: News Feed Section at the bottom */}
       <NewsFeed />
 
-      {/* Reminder Popup for Simulado */}
-      {showSimuladoReminder && (
+      {/* Reminder Popup for Clase de Repaso */}
+      {showRepasoReminder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-amber-400">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-amber-900/30">
-              <Award className="text-amber-500 w-8 h-8" />
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-emerald-400">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-emerald-900/30">
+               <TrendingUp className="text-emerald-500 w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡No te olvides!</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡Grabación Disponible!</h3>
             <p className="text-gray-600 mb-6 dark:text-gray-300">
-              El <strong>Simulado Pre Parcial</strong> será este <br />
-              <span className="text-amber-600 font-bold dark:text-amber-400 text-lg block mt-1">19 de Abril a las 20:00 hs</span>
-              <br />
-              ¡Prepárate y llega a tiempo para evaluar tus conocimientos!
+              La <strong>Clase de Repaso Intensivo</strong> <br />
+              ya se encuentra disponible en la plataforma.
+              <br /><br />
+              ¡Entra ahora para prepararte para el examen!
             </p>
             <button 
-              onClick={dismissReminder}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm"
+              onClick={() => {
+                dismissRepasoReminder();
+                onViewClaseRepaso();
+              }}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm mb-3"
             >
-              ¡Entendido, estaré ahí!
+              ¡Ver Clase Ahora!
+            </button>
+            <button 
+              onClick={dismissRepasoReminder}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-300"
+            >
+              Quizás más tarde
             </button>
           </div>
         </div>
