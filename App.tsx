@@ -14,6 +14,7 @@ import AdminNews from './components/AdminNews';
 import AdminFinances from './components/AdminFinances'; // New import
 import UpdatePassword from './components/UpdatePassword';
 import SimuladoView from './components/SimuladoView';
+import ClaseRepasoView from './components/ClaseRepasoView';
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
 import QuizView from './components/QuizView';
@@ -476,11 +477,19 @@ const App: React.FC = () => {
           onViewReports={() => handleNavigate(ViewState.PERFORMANCE)}
           onStartCustomSession={handleStartCustomSession}
           onOpenSubscription={() => setCurrentView(ViewState.SUBSCRIPTION)}
+          onViewClaseRepaso={() => setCurrentView(ViewState.CLASE_REPASO)}
         />
       )}
 
       {currentView === ViewState.SUBSCRIPTION && (
           <SubscriptionPlans 
+             user={user} 
+             onBack={() => setCurrentView(ViewState.DASHBOARD)} 
+          />
+      )}
+
+      {currentView === ViewState.CLASE_REPASO && (
+          <ClaseRepasoView 
              user={user} 
              onBack={() => setCurrentView(ViewState.DASHBOARD)} 
           />

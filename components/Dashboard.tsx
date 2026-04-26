@@ -19,6 +19,7 @@ interface DashboardProps {
   onViewReports: () => void;
   onStartCustomSession: (moduleIds: string[], isRandom: boolean) => void;
   onOpenSubscription: () => void;
+  onViewClaseRepaso: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -27,7 +28,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSelectModule, 
   onViewReports,
   onStartCustomSession,
-  onOpenSubscription
+  onOpenSubscription,
+  onViewClaseRepaso
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
@@ -269,13 +271,18 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Clase de Repaso */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6">
+          <div 
+            onClick={() => user.role === 'admin' && onViewClaseRepaso()}
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${user.role === 'admin' ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`}
+          >
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <PlayCircle size={120} />
             </div>
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-              PRÓXIMAMENTE
-            </div>
+            {user.role !== 'admin' && (
+              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+                PRÓXIMAMENTE
+              </div>
+            )}
             
             <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
                <TrendingUp size={32} className="text-emerald-100" />
@@ -286,10 +293,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-emerald-100 text-sm mb-4">
                 Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
               </p>
-              <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
-                <Lock size={16} />
-                No Disponible
-              </button>
+              {user.role === 'admin' ? (
+                <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full md:w-auto">
+                  <PlayCircle size={16} />
+                  Ingresar a la Clase
+                </button>
+              ) : (
+                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
+                  <Lock size={16} />
+                  No Disponible
+                </button>
+              )}
             </div>
           </div>
         </div>
