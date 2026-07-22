@@ -14,6 +14,7 @@ import AdminNews from './components/AdminNews';
 import AdminFinances from './components/AdminFinances'; // New import
 import UpdatePassword from './components/UpdatePassword';
 import SimuladoView from './components/SimuladoView';
+import Simulado2View from './components/Simulado2View';
 import ClaseRepasoView from './components/ClaseRepasoView';
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
@@ -288,6 +289,10 @@ const App: React.FC = () => {
       setCurrentView(ViewState.SIMULADO);
       return;
     }
+    if (moduleIds.length === 1 && moduleIds[0] === 'simulado2') {
+      setCurrentView(ViewState.SIMULADO2);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -497,6 +502,13 @@ const App: React.FC = () => {
 
       {currentView === ViewState.SIMULADO && (
           <SimuladoView 
+             user={user} 
+             onBack={() => setCurrentView(ViewState.DASHBOARD)} 
+          />
+      )}
+
+      {currentView === ViewState.SIMULADO2 && (
+          <Simulado2View 
              user={user} 
              onBack={() => setCurrentView(ViewState.DASHBOARD)} 
           />

@@ -74,6 +74,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     setShowRepasoReminder(false);
   };
 
+  // Modal recordatorio - Simulado 2
+  const shouldShowSimulado2Reminder = localStorage.getItem('simulado2ReminderDismissed_1') !== 'true';
+  const [showSimulado2Reminder, setShowSimulado2Reminder] = useState(shouldShowSimulado2Reminder);
+
+  const dismissSimulado2Reminder = () => {
+    localStorage.setItem('simulado2ReminderDismissed_1', 'true');
+    setShowSimulado2Reminder(false);
+  };
+
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
   const radarData = modules.slice(0, 6).map(m => ({
     subject: m.title.length > 12 ? m.title.substring(0, 9) + '...' : m.title,
@@ -227,9 +236,45 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Premium Preparation Section */}
       <div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          {/* Simulado 2 */}
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado2'], false)}>
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
+            </div>
+            {!canAccessSimulado && (
+              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+                PREMIUM
+              </div>
+            )}
+            
+            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
+               <Award size={32} className="text-purple-100" />
+            </div>
+            
+            <div className="z-10 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2">Simulado 2do Parcial</h3>
+                <p className="text-purple-100 text-sm mb-4">
+                  ¡Nuevo! Prepárate para el segundo parcial con este examen.
+                </p>
+              </div>
+              {canAccessSimulado ? (
+                <button className="bg-white text-purple-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-purple-50 flex items-center justify-center gap-2 w-full mt-auto">
+                  <PlayCircle size={16} />
+                  Ingresar al Simulado
+                </button>
+              ) : (
+                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full mt-auto">
+                  <Lock size={16} />
+                  Solo Premium
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Simulados Pre Parcial */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
             <div className="absolute top-0 right-0 p-3 opacity-10">
               {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
             </div>
@@ -239,31 +284,24 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
             
-            {/* Tooltip for upcoming date */}
-            {!canAccessSimulado && isPremium && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-20 flex items-center gap-2">
-                <Award size={14} />
-                ¡Prepárate! El simulado se habilitará el 19 de Abril a las 20:00 hs.
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-amber-500 rotate-45"></div>
-              </div>
-            )}
-            
             <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
                <Award size={32} className="text-indigo-100" />
             </div>
             
-            <div className="z-10 flex-1 text-center md:text-left">
-              <h3 className="text-xl font-bold mb-2">Simulados Pre Parcial</h3>
-              <p className="text-indigo-100 text-sm mb-4">
-                Pon a prueba tus conocimientos con exámenes cronometrados diseñados para simular la experiencia real.
-              </p>
+            <div className="z-10 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2">Simulado 1er Parcial</h3>
+                <p className="text-indigo-100 text-sm mb-4">
+                  Pon a prueba tus conocimientos con exámenes cronometrados diseñados para simular la experiencia real.
+                </p>
+              </div>
               {canAccessSimulado ? (
-                <button className="bg-white text-indigo-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-indigo-50 flex items-center justify-center gap-2 w-full md:w-auto">
+                <button className="bg-white text-indigo-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-indigo-50 flex items-center justify-center gap-2 w-full mt-auto">
                   <PlayCircle size={16} />
                   Ingresar al Simulado
                 </button>
               ) : (
-                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto">
+                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full mt-auto">
                   <Lock size={16} />
                   {isPremium ? 'Disponible el 19 de Abril, 20:00 hs' : 'Solo para usuarios Premium'}
                 </button>
@@ -274,7 +312,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Clase de Repaso */}
           <div 
             onClick={() => onViewClaseRepaso()}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:shadow-xl transition-shadow"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:shadow-xl transition-shadow"
           >
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <PlayCircle size={120} />
@@ -284,12 +322,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                <TrendingUp size={32} className="text-emerald-100" />
             </div>
             
-            <div className="z-10 flex-1 text-center md:text-left">
-              <h3 className="text-xl font-bold mb-2">Clase de Repaso</h3>
-              <p className="text-emerald-100 text-sm mb-4">
-                Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
-              </p>
-              <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full md:w-auto">
+            <div className="z-10 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2">Clase de Repaso</h3>
+                <p className="text-emerald-100 text-sm mb-4">
+                  Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
+                </p>
+              </div>
+              <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full mt-auto">
                 <PlayCircle size={16} />
                 Ingresar a la Clase
               </button>
@@ -365,6 +405,43 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* NEW: News Feed Section at the bottom */}
       <NewsFeed />
+
+      {/* Reminder Popup for Simulado 2 */}
+      {showSimulado2Reminder && !showRepasoReminder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-purple-400">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-purple-900/30">
+               <Award className="text-purple-500 w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡Simulado 2 Disponible!</h3>
+            <p className="text-gray-600 mb-6 dark:text-gray-300">
+              El <strong>Simulado para el 2do Parcial</strong> <br />
+              ya está habilitado.
+              <br /><br />
+              Pon a prueba tus conocimientos antes del examen real.
+            </p>
+            <button 
+              onClick={() => {
+                dismissSimulado2Reminder();
+                if (canAccessSimulado) {
+                  onStartCustomSession(['simulado2'], false);
+                } else {
+                  onOpenSubscription();
+                }
+              }}
+              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm mb-3"
+            >
+              ¡Comenzar Simulado 2!
+            </button>
+            <button 
+              onClick={dismissSimulado2Reminder}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-300"
+            >
+              Más tarde
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Reminder Popup for Clase de Repaso */}
       {showRepasoReminder && (
