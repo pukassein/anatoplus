@@ -83,6 +83,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     setShowSimulado2Reminder(false);
   };
 
+  // Check if Repaso 2do parcial is recent (published July 24, 2026 - valid for 10 days)
+  const isRepasoNew = React.useMemo(() => {
+    const publishDate = new Date('2026-07-24T00:00:00Z');
+    const today = new Date();
+    const diffTime = today.getTime() - publishDate.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays <= 10 && diffDays >= -1;
+  }, []);
+
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
   const radarData = modules.slice(0, 6).map(m => ({
     subject: m.title.length > 12 ? m.title.substring(0, 9) + '...' : m.title,
@@ -312,11 +321,17 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Clase de Repaso */}
           <div 
             onClick={() => onViewClaseRepaso()}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:shadow-xl transition-shadow"
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:shadow-xl transition-shadow ${isRepasoNew ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse-slow' : ''}`}
           >
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <PlayCircle size={120} />
             </div>
+            
+            {isRepasoNew && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce shadow-lg">
+                ¡NUEVO 2DO PARCIAL!
+              </div>
+            )}
             
             <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
                <TrendingUp size={32} className="text-emerald-100" />
@@ -324,14 +339,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             
             <div className="z-10 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-xl font-bold mb-2">Clase de Repaso</h3>
+                <h3 className="text-xl font-bold mb-2">Clases de Repaso</h3>
                 <p className="text-emerald-100 text-sm mb-4">
-                  Accede a sesiones intensivas de repaso en vivo y grabadas para reforzar los temas clave.
+                  ¡Ya está disponible el Repaso del 2do Parcial! Accede a todas las sesiones intensivas.
                 </p>
               </div>
               <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full mt-auto">
                 <PlayCircle size={16} />
-                Ingresar a la Clase
+                Ingresar a las Clases
               </button>
             </div>
           </div>

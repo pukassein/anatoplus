@@ -113,7 +113,7 @@ export const api = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, Plans(nombre)') 
+      .select('*') 
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -121,12 +121,18 @@ export const api = {
         throw error;
     }
     
-    return data.map((u: any) => ({
-        ...u,
-        isActive: u.is_active,
-        planId: u.plan_id,
-        planName: u.Plans?.nombre
-    }));
+    // Fetch Plans separately to avoid relationship parsing errors
+    const { data: plansData } = await supabase.from('Plans').select('id_Plan, nombre');
+
+    return data.map((u: any) => {
+        const userPlan = plansData?.find(p => p.id_Plan === u.plan_id);
+        return {
+            ...u,
+            isActive: u.is_active,
+            planId: u.plan_id,
+            planName: userPlan ? userPlan.nombre : undefined
+        };
+    });
   },
 
   updateUserStatus: async (userId: string, isActive: boolean) => {
@@ -225,30 +231,33 @@ export const api = {
 
       const { data, error } = await supabase
         .from('payment_requests')
-        .select(`
-            *,
-            profiles (full_name, email),
-            Plans (nombre, precio)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data.map((req: any) => ({
-          id: req.id.toString(),
-          userId: req.user_id,
-          userName: req.profiles?.full_name,
-          userEmail: req.profiles?.email,
-          planId: req.plan_id.toString(),
-          planName: req.Plans?.nombre,
-          planPrice: req.Plans?.precio,
-          // New Fields
-          finalPrice: req.final_price !== null ? req.final_price : undefined, 
-          notes: req.notes,
-          proofUrl: req.proof_url,
-          status: req.status,
-          createdAt: req.created_at
-      }));
+      // Fetch related data separately
+      const { data: profilesData } = await supabase.from('profiles').select('id, full_name, email');
+      const { data: plansData } = await supabase.from('Plans').select('id_Plan, nombre, precio');
+
+      return data.map((req: any) => {
+          const userProfile = profilesData?.find(p => p.id === req.user_id);
+          const userPlan = plansData?.find(p => p.id_Plan === req.plan_id);
+          return {
+              id: req.id.toString(),
+              userId: req.user_id,
+              userName: userProfile?.full_name,
+              userEmail: userProfile?.email,
+              planId: req.plan_id.toString(),
+              planName: userPlan?.nombre,
+              planPrice: userPlan?.precio,
+              finalPrice: req.final_price !== null ? req.final_price : undefined, 
+              notes: req.notes,
+              proofUrl: req.proof_url,
+              status: req.status,
+              createdAt: req.created_at
+          };
+      });
   },
 
   processPayment: async (
