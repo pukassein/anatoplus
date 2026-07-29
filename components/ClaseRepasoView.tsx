@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, PlayCircle, ExternalLink, AlertCircle } from 'lucide-react';
+import { ArrowLeft, PlayCircle, ExternalLink, AlertCircle, FileText } from 'lucide-react';
 import { User } from '../types';
 
 interface ClaseRepasoViewProps {
@@ -99,13 +99,13 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
                   </p>
                 </div>
                 <a
-                  href={videos[0].originalLink}
+                  href="https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/REPASO%20ANATOPLUS%202DO%20PARCIAL.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-colors shadow-lg hover:shadow-emerald-500/30 flex items-center justify-center gap-2"
                 >
-                  <ExternalLink size={20} />
-                  Ver en YouTube
+                  <FileText size={20} />
+                  Ver / Descargar PDF
                 </a>
               </div>
             </div>
@@ -147,15 +147,6 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
                     {video.description}
                   </p>
                 </div>
-                <a
-                  href={video.originalLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-2.5 bg-emerald-100 text-emerald-700 rounded-xl font-bold hover:bg-emerald-200 transition-colors flex items-center justify-center gap-2 dark:bg-emerald-900/30 dark:text-emerald-400"
-                >
-                  <ExternalLink size={18} />
-                  Ver en YouTube
-                </a>
               </div>
             </div>
           </div>
