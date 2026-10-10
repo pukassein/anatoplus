@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { MOCK_MODULES, MOCK_TOPICS, MOCK_QUESTIONS } from '../constants';
-import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails, NewsPost, Expense } from '../types';
+import { Module, Topic, Subtopic, Question, Plan, UserStats, PaymentRequest, BankDetails, NewsPost, Expense, Exam, ExamQuestion, ExamAttempt } from '../types';
 
 // ==========================================
 // CONFIGURATION
@@ -24,6 +24,48 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ==========================================
 
 export const api = {
+  exams: {
+    getPublished: async (slug: string): Promise<{ exam: Exam; questions: ExamQuestion[]; latestAttempt?: ExamAttempt; review?: any[]; canStartNew?: boolean }> => {
+      const { data, error } = await supabase.rpc('get_published_exam', { p_slug: slug });
+      if (error) throw error;
+      if (!data) throw new Error('El simulado no está disponible.');
+      return data;
+    },
+    start: async (examId: string): Promise<ExamAttempt> => {
+      const { data, error } = await supabase.rpc('start_exam_attempt', { p_exam_id: examId });
+      if (error) throw error;
+      return data;
+    },
+    saveAnswer: async (attemptId: string, questionId: string, optionId: string) => {
+      const { error } = await supabase.rpc('save_exam_answer', {
+        p_attempt_id: attemptId, p_question_id: questionId, p_option_id: optionId
+      });
+      if (error) throw error;
+    },
+    submit: async (attemptId: string): Promise<ExamAttempt> => {
+      const { data, error } = await supabase.rpc('submit_exam_attempt', { p_attempt_id: attemptId });
+      if (error) throw error;
+      return data;
+    },
+    adminResults: async () => {
+      const { data, error } = await supabase.rpc('admin_exam_results');
+      if (error) throw error;
+      return data || [];
+    },
+    adminAttempt: async (attemptId: string) => {
+      const { data, error } = await supabase.rpc('admin_exam_attempt_detail', { p_attempt_id: attemptId });
+      if (error) throw error;
+      return data;
+    },
+    publishResults: async (examId: string, published: boolean) => {
+      const { error } = await supabase.rpc('admin_publish_exam_results', { p_exam_id: examId, p_published: published });
+      if (error) throw error;
+    },
+    grantRetry: async (examId: string, userId: string) => {
+      const { error } = await supabase.rpc('admin_grant_exam_retry', { p_exam_id: examId, p_user_id: userId });
+      if (error) throw error;
+    }
+  },
   
   // --- AUTHENTICATION ---
   

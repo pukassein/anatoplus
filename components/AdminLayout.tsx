@@ -13,6 +13,7 @@ import {
   BookOpen,
   Megaphone,
   PieChart
+  ,ClipboardCheck
 } from 'lucide-react';
 import { User, ViewState } from '../types';
 
@@ -102,6 +103,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
         <div className="flex-1 py-6 pr-4 overflow-y-auto custom-scrollbar">
           <NavItem view={ViewState.ADMIN_DASHBOARD} label="Dashboard" icon={LayoutDashboard} />
           <NavItem view={ViewState.ADMIN_QUESTIONS} label="Preguntas" icon={HelpCircle} />
+          <NavItem view={ViewState.ADMIN_EXAMS} label="Simulados" icon={ClipboardCheck} />
           <NavItem view={ViewState.ADMIN_USERS} label="Usuarios" icon={Users} />
           <NavItem view={ViewState.ADMIN_PAYMENTS} label="Pagos" icon={Wallet} />
           <NavItem view={ViewState.ADMIN_FINANCES} label="Finanzas" icon={PieChart} />
@@ -174,6 +176,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user, currentView, 
                {currentView === ViewState.ADMIN_PAYMENTS && 'Solicitudes de Pago'}
                {currentView === ViewState.ADMIN_FINANCES && 'Finanzas y Gastos'}
                {currentView === ViewState.ADMIN_NEWS && 'Novedades y Testimonios'}
+               {currentView === ViewState.ADMIN_EXAMS && 'Resultados de Simulados'}
              </h1>
            </div>
            

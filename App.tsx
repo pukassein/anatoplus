@@ -15,6 +15,8 @@ import AdminFinances from './components/AdminFinances'; // New import
 import UpdatePassword from './components/UpdatePassword';
 import SimuladoView from './components/SimuladoView';
 import Simulado2View from './components/Simulado2View';
+import ExamView from './components/ExamView';
+import AdminExams from './components/AdminExams';
 import ClaseRepasoView from './components/ClaseRepasoView';
 import TopicList from './components/TopicList';
 import SubtopicList from './components/SubtopicList'; 
@@ -293,6 +295,10 @@ const App: React.FC = () => {
       setCurrentView(ViewState.SIMULADO2);
       return;
     }
+    if (moduleIds.length === 1 && moduleIds[0] === 'simulado3') {
+      setCurrentView(ViewState.SIMULADO3);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -455,6 +461,7 @@ const App: React.FC = () => {
         {currentView === ViewState.ADMIN_PAYMENTS && <AdminPayments />}
         {currentView === ViewState.ADMIN_FINANCES && <AdminFinances />}
         {currentView === ViewState.ADMIN_NEWS && <AdminNews />}
+        {currentView === ViewState.ADMIN_EXAMS && <AdminExams />}
         {(currentView === ViewState.ADMIN_COMMENTS) && (
            <div className="p-10 text-center text-gray-500 bg-white rounded-lg border border-dashed">
               Sección en desarrollo
@@ -513,6 +520,7 @@ const App: React.FC = () => {
              onBack={() => setCurrentView(ViewState.DASHBOARD)} 
           />
       )}
+      {currentView === ViewState.SIMULADO3 && <ExamView slug="simulado-anatoplus-3" onBack={() => setCurrentView(ViewState.DASHBOARD)} />}
 
       {currentView === ViewState.MODULE_TOPICS && selectedModule && (
         <TopicList 

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Module, User } from '../types';
 import { PlayCircle, Award, TrendingUp, Settings, Zap, Shuffle, CheckCircle2, X, Lock, Crown } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  RadarChart, 
+import {
+  RadarChart,
   PolarGrid, 
   PolarAngleAxis, 
   PolarRadiusAxis, 
@@ -63,25 +62,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Liberate entirely after start time
   const isSimuladoTime = now >= simuladoStartTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
-
-  // Modal recordatorio - Clase de Repaso
-  const claseRepasoPopupEndTime = new Date('2026-04-28T23:59:59Z');
-  const shouldShowRepasoReminder = now < claseRepasoPopupEndTime && localStorage.getItem('repasoReminderDismissed_1') !== 'true';
-  const [showRepasoReminder, setShowRepasoReminder] = useState(shouldShowRepasoReminder);
-
-  const dismissRepasoReminder = () => {
-    localStorage.setItem('repasoReminderDismissed_1', 'true');
-    setShowRepasoReminder(false);
-  };
-
-  // Modal recordatorio - Simulado 2
-  const shouldShowSimulado2Reminder = localStorage.getItem('simulado2ReminderDismissed_1') !== 'true';
-  const [showSimulado2Reminder, setShowSimulado2Reminder] = useState(shouldShowSimulado2Reminder);
-
-  const dismissSimulado2Reminder = () => {
-    localStorage.setItem('simulado2ReminderDismissed_1', 'true');
-    setShowSimulado2Reminder(false);
-  };
 
   // Check if Repaso 2do parcial is recent (published July 24, 2026 - valid for 10 days)
   const isRepasoNew = React.useMemo(() => {
@@ -179,8 +159,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         {/* Radar Chart Visualization (Hidden on small screens to save space) */}
         <div className="hidden lg:flex flex-col items-center justify-center relative z-10 h-72 w-96 -mr-8">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+          <RadarChart width={384} height={288} cx="50%" cy="50%" outerRadius="70%" data={radarData}>
               <PolarGrid stroke="#fef3c7" className="dark:stroke-amber-900/30" /> 
               <PolarAngleAxis 
                 dataKey="subject" 
@@ -200,8 +179,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                 itemStyle={{ color: '#F59E0B', fontWeight: 'bold' }}
               />
-            </RadarChart>
-          </ResponsiveContainer>
+          </RadarChart>
         </div>
 
         {/* Decor items */}
@@ -245,7 +223,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Premium Preparation Section */}
       <div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+          {/* Simulado 3 nativo */}
+          <div onClick={() => isPremium ? onStartCustomSession(['simulado3'], false) : onOpenSubscription()} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white p-6 flex flex-col items-center text-center gap-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] ring-4 ring-amber-300/80 dark:ring-amber-400/60 shadow-[0_0_28px_rgba(249,115,22,0.75)] hover:shadow-[0_0_45px_rgba(249,115,22,0.95)] animate-pulse-slow">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" />
+            <div className="absolute top-0 right-0 p-3 opacity-15"><Award size={120}/></div>
+            <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg animate-bounce">¡NUEVO!</div>
+            <div className="z-10 bg-white/10 p-4 rounded-full"><Award size={32}/></div>
+            <div className="z-10 flex-1 flex flex-col justify-between"><div><h3 className="text-xl font-bold mb-2">Simulado 3</h3><p className="text-amber-100 text-sm mb-4">Responde el examen completo directamente en AnatoPlus.</p></div><button className="bg-white text-orange-600 text-sm font-bold py-2 px-6 rounded-lg w-full mt-auto flex justify-center gap-2"><PlayCircle size={16}/>{isPremium?'Comenzar Simulado':'Solo Premium'}</button></div>
+          </div>
           {/* Simulado 2 */}
           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado2'], false)}>
             <div className="absolute top-0 right-0 p-3 opacity-10">
@@ -420,76 +406,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* NEW: News Feed Section at the bottom */}
       <NewsFeed />
-
-      {/* Reminder Popup for Simulado 2 */}
-      {showSimulado2Reminder && !showRepasoReminder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-purple-400">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-purple-900/30">
-               <Award className="text-purple-500 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡Simulado 2 Disponible!</h3>
-            <p className="text-gray-600 mb-6 dark:text-gray-300">
-              El <strong>Simulado para el 2do Parcial</strong> <br />
-              ya está habilitado.
-              <br /><br />
-              Pon a prueba tus conocimientos antes del examen real.
-            </p>
-            <button 
-              onClick={() => {
-                dismissSimulado2Reminder();
-                if (canAccessSimulado) {
-                  onStartCustomSession(['simulado2'], false);
-                } else {
-                  onOpenSubscription();
-                }
-              }}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm mb-3"
-            >
-              ¡Comenzar Simulado 2!
-            </button>
-            <button 
-              onClick={dismissSimulado2Reminder}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-300"
-            >
-              Más tarde
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Reminder Popup for Clase de Repaso */}
-      {showRepasoReminder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center animate-scale-up dark:bg-slate-800 border-2 border-emerald-400">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-emerald-900/30">
-               <TrendingUp className="text-emerald-500 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">¡Grabación Disponible!</h3>
-            <p className="text-gray-600 mb-6 dark:text-gray-300">
-              La <strong>Clase de Repaso Intensivo</strong> <br />
-              ya se encuentra disponible en la plataforma.
-              <br /><br />
-              ¡Entra ahora para prepararte para el examen!
-            </p>
-            <button 
-              onClick={() => {
-                dismissRepasoReminder();
-                onViewClaseRepaso();
-              }}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-colors shadow-sm mb-3"
-            >
-              ¡Ver Clase Ahora!
-            </button>
-            <button 
-              onClick={dismissRepasoReminder}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors shadow-sm dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-300"
-            >
-              Quizás más tarde
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Study Configuration Modal */}
       {isModalOpen && (

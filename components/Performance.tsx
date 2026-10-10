@@ -70,10 +70,10 @@ const Performance: React.FC<PerformanceProps> = ({ modules, user }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Bar Chart Card */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-0">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Progreso por Módulo</h3>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-80 w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
               <BarChart
                 data={barData}
                 margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
@@ -92,10 +92,10 @@ const Performance: React.FC<PerformanceProps> = ({ modules, user }) => {
         </div>
 
         {/* Radar Chart Card */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-0">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Mapa de Conocimiento</h3>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-80 w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                 <PolarGrid stroke="#E5E7EB" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#6B7280', fontSize: 12 }} />

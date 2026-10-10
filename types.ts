@@ -10,6 +10,7 @@ export enum ViewState {
   UPDATE_PASSWORD = 'UPDATE_PASSWORD',
   SIMULADO = 'SIMULADO',
   SIMULADO2 = 'SIMULADO2',
+  SIMULADO3 = 'SIMULADO3',
   CLASE_REPASO = 'CLASE_REPASO',
   // Admin Views
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
@@ -19,7 +20,25 @@ export enum ViewState {
   ADMIN_PLANS = 'ADMIN_PLANS',
   ADMIN_PAYMENTS = 'ADMIN_PAYMENTS',
   ADMIN_NEWS = 'ADMIN_NEWS',
-  ADMIN_FINANCES = 'ADMIN_FINANCES' // New View
+  ADMIN_FINANCES = 'ADMIN_FINANCES', // New View
+  ADMIN_EXAMS = 'ADMIN_EXAMS'
+}
+
+export interface ExamOption { id: string; text: string }
+export interface ExamQuestion { id: string; externalId: string; order: number; text: string; options: ExamOption[]; imageUrl?: string | null }
+export interface Exam {
+  id: string; title: string; description: string; instructions: string[];
+  durationMinutes: number; maxAttempts: number; showScoreAfterSubmission: boolean;
+  showAnswersAfterSubmission: boolean; questionCount: number;
+}
+export interface ExamReviewQuestion {
+  externalId: string; order: number; text: string; selectedOptionId: string | null;
+  selectedText: string | null; correctOptionId: string; correctText: string; isCorrect: boolean; explanation: string;
+}
+export interface ExamAttempt {
+  id: string; examId: string; status: 'in_progress' | 'submitted' | 'expired';
+  startedAt: string; submittedAt?: string | null; score?: number | null; totalQuestions: number;
+  answers: Record<string, string>;
 }
 
 export interface User {
