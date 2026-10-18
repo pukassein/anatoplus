@@ -224,13 +224,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-          {/* Simulado 3 nativo */}
-          <div onClick={() => isPremium ? onStartCustomSession(['simulado3'], false) : onOpenSubscription()} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white p-6 flex flex-col items-center text-center gap-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] ring-4 ring-amber-300/80 dark:ring-amber-400/60 shadow-[0_0_28px_rgba(249,115,22,0.75)] hover:shadow-[0_0_45px_rgba(249,115,22,0.95)] animate-pulse-slow">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" />
+          {/* Simulado 3 */}
+          <div onClick={() => isPremium ? onStartCustomSession(['simulado3'], false) : onOpenSubscription()} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer transition-shadow hover:shadow-xl">
             <div className="absolute top-0 right-0 p-3 opacity-15"><Award size={120}/></div>
-            <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg animate-bounce">¡NUEVO!</div>
             <div className="z-10 bg-white/10 p-4 rounded-full"><Award size={32}/></div>
-            <div className="z-10 flex-1 flex flex-col justify-between"><div><h3 className="text-xl font-bold mb-2">Simulado 3</h3><p className="text-amber-100 text-sm mb-4">Responde el examen completo directamente en AnatoPlus.</p></div><button className="bg-white text-orange-600 text-sm font-bold py-2 px-6 rounded-lg w-full mt-auto flex justify-center gap-2"><PlayCircle size={16}/>{isPremium?'Comenzar Simulado':'Solo Premium'}</button></div>
+            <div className="z-10 flex-1 flex flex-col justify-between"><div><h3 className="text-xl font-bold mb-2">Simulado 3</h3><p className="text-amber-100 text-sm mb-4">Consulta el PDF comentado y responde el examen en AnatoPlus.</p></div><button className="bg-white text-orange-600 text-sm font-bold py-2 px-6 rounded-lg w-full mt-auto flex justify-center gap-2"><PlayCircle size={16}/>{isPremium?'Ingresar al Simulado':'Solo Premium'}</button></div>
           </div>
           {/* Simulado 2 */}
           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado2'], false)}>

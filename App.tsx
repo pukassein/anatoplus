@@ -15,7 +15,7 @@ import AdminFinances from './components/AdminFinances'; // New import
 import UpdatePassword from './components/UpdatePassword';
 import SimuladoView from './components/SimuladoView';
 import Simulado2View from './components/Simulado2View';
-import ExamView from './components/ExamView';
+import Simulado3View from './components/Simulado3View';
 import AdminExams from './components/AdminExams';
 import ClaseRepasoView from './components/ClaseRepasoView';
 import TopicList from './components/TopicList';
@@ -520,7 +520,9 @@ const App: React.FC = () => {
              onBack={() => setCurrentView(ViewState.DASHBOARD)} 
           />
       )}
-      {currentView === ViewState.SIMULADO3 && <ExamView slug="simulado-anatoplus-3" onBack={() => setCurrentView(ViewState.DASHBOARD)} />}
+      {currentView === ViewState.SIMULADO3 && (
+          <Simulado3View onBack={() => setCurrentView(ViewState.DASHBOARD)} />
+      )}
 
       {currentView === ViewState.MODULE_TOPICS && selectedModule && (
         <TopicList 
