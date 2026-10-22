@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, PlayCircle, ExternalLink, AlertCircle, FileText } from 'lucide-react';
+import { ArrowLeft, PlayCircle, FileText, Download, Sparkles } from 'lucide-react';
 import { User } from '../types';
 
 interface ClaseRepasoViewProps {
@@ -9,12 +9,13 @@ interface ClaseRepasoViewProps {
 
 const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
   const isRepasoNew = React.useMemo(() => {
-    const publishDate = new Date('2026-07-24T00:00:00Z');
+    const publishDate = new Date('2026-10-22T00:00:00-03:00');
+    const newUntil = new Date('2026-10-26T00:00:00-03:00');
     const today = new Date();
-    const diffTime = today.getTime() - publishDate.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    return diffDays <= 10 && diffDays >= -1;
+    return today >= publishDate && today < newUntil;
   }, []);
+
+  const repaso3PdfUrl = 'https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/REPASO%20ANATOPLUS%203p.pdf';
 
   const videos = [
     {
@@ -47,65 +48,39 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clase de Repaso</h1>
-          <p className="text-gray-500 dark:text-gray-400">Sesión Intensiva de Anatomía</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Repasos</h1>
+          <p className="text-gray-500 dark:text-gray-400">Material intensivo de Anatomía</p>
         </div>
       </div>
 
       <div className="space-y-12">
-        {/* Destacado: Repaso 2do Parcial */}
+        {/* Destacado: Repaso 3 */}
         <div className="space-y-6">
           {isRepasoNew && (
             <div className="flex items-center gap-3">
                <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
                <span className="text-emerald-600 font-bold uppercase tracking-wider text-sm px-4 py-1 bg-emerald-50 rounded-full border border-emerald-200 shadow-sm dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400">
-                 ¡Lo Nuevo!
+                 ¡Nuevo Repaso!
                </span>
                <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
             </div>
           )}
           
-          <div className="space-y-4 relative">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 shadow-xl md:p-9">
             {isRepasoNew && (
-              <div className="absolute -inset-4 bg-emerald-500/10 rounded-[32px] blur-xl z-0 pointer-events-none"></div>
+              <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-md">NUEVO · 4 DÍAS</div>
             )}
-            {/* Video Player Container */}
-            <div className={`bg-black rounded-2xl overflow-hidden shadow-2xl relative pt-[56.25%] z-10 ${isRepasoNew ? 'ring-4 ring-emerald-400/50' : ''}`}>
-              <iframe
-                className="absolute top-0 left-0 w-full h-full"
-                src={videos[0].videoUrl}
-                title={videos[0].title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              ></iframe>
-            </div>
-
-            {/* Info Card */}
-            <div className={`bg-white rounded-2xl p-6 shadow-xl relative z-10 dark:bg-slate-800 ${isRepasoNew ? 'border-2 border-emerald-200 dark:border-emerald-700/50' : 'border border-gray-200 dark:border-slate-700'}`}>
-              {isRepasoNew && (
-                <div className="absolute top-0 right-6 -translate-y-1/2 bg-red-500 text-white font-bold text-xs px-3 py-1 rounded-full shadow-lg animate-bounce">
-                   NUEVO
-                </div>
-              )}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-                    <PlayCircle className="text-emerald-500" size={28} />
-                    {videos[0].title}
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
-                    {videos[0].description}
-                  </p>
-                </div>
-                <a
-                  href="https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/REPASO%20ANATOPLUS%202DO%20PARCIAL.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-colors shadow-lg hover:shadow-emerald-500/30 flex items-center justify-center gap-2"
-                >
-                  <FileText size={20} />
-                  Ver / Descargar PDF
+            <Sparkles className="absolute -bottom-8 -right-5 h-48 w-48 text-white/10" />
+            <div className="relative max-w-2xl text-white">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold backdrop-blur-sm"><FileText size={16} /> PDF · 200 páginas · aprox. 22 MB</span>
+              <h2 className="mt-5 text-3xl font-black md:text-4xl">Repaso AnatoPlus 3</h2>
+              <p className="mt-3 text-base leading-relaxed text-emerald-50 md:text-lg">Ya puedes consultar el nuevo material de repaso o descargarlo para estudiar sin conexión.</p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <a href={repaso3PdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-bold text-emerald-700 shadow-lg transition-colors hover:bg-emerald-50">
+                  <FileText size={20} /> Ver PDF
+                </a>
+                <a href={repaso3PdfUrl} download="Repaso-AnatoPlus-3.pdf" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20">
+                  <Download size={20} /> Descargar PDF
                 </a>
               </div>
             </div>
@@ -115,13 +90,13 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
         <div className="flex items-center gap-3 pt-8">
            <div className="h-px bg-gray-200 flex-1 dark:bg-slate-700"></div>
            <span className="text-gray-500 font-bold uppercase tracking-wider text-sm px-4 dark:text-gray-400">
-             Clases Anteriores
+             Repasos anteriores
            </span>
            <div className="h-px bg-gray-200 flex-1 dark:bg-slate-700"></div>
         </div>
 
-        {/* Anteriores */}
-        {videos.slice(1).map((video, index) => (
+        {/* Repasos anteriores */}
+        {videos.map((video, index) => (
           <div key={index} className="space-y-4">
             {/* Video Player Container */}
             <div className="bg-black rounded-2xl overflow-hidden shadow-lg relative pt-[56.25%]">
@@ -147,6 +122,16 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
                     {video.description}
                   </p>
                 </div>
+                {index === 0 && (
+                  <a
+                    href="https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/REPASO%20ANATOPLUS%202DO%20PARCIAL.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-5 py-3 font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
+                  >
+                    <FileText size={19} /> Ver / Descargar PDF
+                  </a>
+                )}
               </div>
             </div>
           </div>

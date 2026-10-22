@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Module, User } from '../types';
-import { PlayCircle, Award, TrendingUp, Settings, Zap, Shuffle, CheckCircle2, X, Lock, Crown } from 'lucide-react';
+import { PlayCircle, Award, TrendingUp, Settings, Zap, Shuffle, CheckCircle2, X, Lock, Crown, BookOpen, ChevronRight, FileDown } from 'lucide-react';
 import {
   RadarChart,
   PolarGrid, 
@@ -63,13 +63,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isSimuladoTime = now >= simuladoStartTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
 
-  // Check if Repaso 2do parcial is recent (published July 24, 2026 - valid for 10 days)
+  // Repaso 3 is highlighted for four days after publication.
   const isRepasoNew = React.useMemo(() => {
-    const publishDate = new Date('2026-07-24T00:00:00Z');
+    const publishDate = new Date('2026-10-22T00:00:00-03:00');
+    const newUntil = new Date('2026-10-26T00:00:00-03:00');
     const today = new Date();
-    const diffTime = today.getTime() - publishDate.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    return diffDays <= 10 && diffDays >= -1;
+    return today >= publishDate && today < newUntil;
   }, []);
 
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
@@ -220,122 +219,73 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Premium Preparation Section */}
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 dark:text-white">Preparación Exclusiva</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-          {/* Simulado 3 */}
-          <div onClick={() => isPremium ? onStartCustomSession(['simulado3'], false) : onOpenSubscription()} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer transition-shadow hover:shadow-xl">
-            <div className="absolute top-0 right-0 p-3 opacity-15"><Award size={120}/></div>
-            <div className="z-10 bg-white/10 p-4 rounded-full"><Award size={32}/></div>
-            <div className="z-10 flex-1 flex flex-col justify-between"><div><h3 className="text-xl font-bold mb-2">Simulado 3</h3><p className="text-amber-100 text-sm mb-4">Consulta el PDF comentado y responde el examen en AnatoPlus.</p></div><button className="bg-white text-orange-600 text-sm font-bold py-2 px-6 rounded-lg w-full mt-auto flex justify-center gap-2"><PlayCircle size={16}/>{isPremium?'Ingresar al Simulado':'Solo Premium'}</button></div>
+      {/* Repasos and Simulados */}
+      <section>
+        <div className="flex items-end justify-between gap-4 mb-4 md:mb-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">Material especial</p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mt-1 dark:text-white">Repasos y simulados</h2>
           </div>
-          {/* Simulado 2 */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado2'], false)}>
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
-            </div>
-            {!canAccessSimulado && (
-              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-                PREMIUM
-              </div>
-            )}
-            
-            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
-               <Award size={32} className="text-purple-100" />
-            </div>
-            
-            <div className="z-10 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Simulado 2do Parcial</h3>
-                <p className="text-purple-100 text-sm mb-4">
-                  ¡Nuevo! Prepárate para el segundo parcial con este examen.
-                </p>
-              </div>
-              {canAccessSimulado ? (
-                <button className="bg-white text-purple-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-purple-50 flex items-center justify-center gap-2 w-full mt-auto">
-                  <PlayCircle size={16} />
-                  Ingresar al Simulado
-                </button>
-              ) : (
-                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full mt-auto">
-                  <Lock size={16} />
-                  Solo Premium
-                </button>
-              )}
-            </div>
-          </div>
+          <span className="hidden sm:block text-sm text-gray-500 dark:text-gray-400">Todo en un solo lugar</span>
+        </div>
 
-          {/* Simulados Pre Parcial */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 ${canAccessSimulado ? 'cursor-pointer hover:shadow-xl transition-shadow' : 'ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse-slow'} group`} onClick={() => canAccessSimulado && onStartCustomSession(['simulado'], false) /* We will intercept this in App.tsx */}>
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              {canAccessSimulado ? <Award size={120} /> : <Lock size={120} />}
-            </div>
-            {!canAccessSimulado && (
-              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-                {isPremium ? 'PRÓXIMAMENTE' : 'PREMIUM'}
-              </div>
-            )}
-            
-            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
-               <Award size={32} className="text-indigo-100" />
-            </div>
-            
-            <div className="z-10 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Simulado 1er Parcial</h3>
-                <p className="text-indigo-100 text-sm mb-4">
-                  Pon a prueba tus conocimientos con exámenes cronometrados diseñados para simular la experiencia real.
-                </p>
-              </div>
-              {canAccessSimulado ? (
-                <button className="bg-white text-indigo-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-indigo-50 flex items-center justify-center gap-2 w-full mt-auto">
-                  <PlayCircle size={16} />
-                  Ingresar al Simulado
-                </button>
-              ) : (
-                <button disabled className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-colors cursor-not-allowed flex items-center justify-center gap-2 w-full mt-auto">
-                  <Lock size={16} />
-                  {isPremium ? 'Disponible el 19 de Abril, 20:00 hs' : 'Solo para usuarios Premium'}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Clase de Repaso */}
-          <div 
-            onClick={() => onViewClaseRepaso()}
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:shadow-xl transition-shadow ${isRepasoNew ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse-slow' : ''}`}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)] gap-4 md:gap-6">
+          <button
+            type="button"
+            onClick={onViewClaseRepaso}
+            className={`relative overflow-hidden min-h-[250px] rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-6 text-left text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl ${isRepasoNew ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''}`}
           >
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              <PlayCircle size={120} />
-            </div>
-            
-            {isRepasoNew && (
-              <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce shadow-lg">
-                ¡NUEVO 2DO PARCIAL!
+            <BookOpen className="absolute -right-6 -bottom-6 h-44 w-44 text-white/10" />
+            <div className="relative flex h-full flex-col">
+              <div className="flex items-start justify-between gap-3">
+                <span className="rounded-xl bg-white/15 p-3 backdrop-blur-sm"><FileDown size={28} /></span>
+                {isRepasoNew && <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">NUEVO · REPASO 3</span>}
               </div>
-            )}
-            
-            <div className="z-10 bg-white/10 p-4 rounded-full backdrop-blur-sm shrink-0">
-               <TrendingUp size={32} className="text-emerald-100" />
-            </div>
-            
-            <div className="z-10 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Clases de Repaso</h3>
-                <p className="text-emerald-100 text-sm mb-4">
-                  ¡Ya está disponible el Repaso del 2do Parcial! Accede a todas las sesiones intensivas.
-                </p>
+              <div className="mt-auto pt-8">
+                <h3 className="text-2xl font-black">Repasos</h3>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-emerald-50">Repaso 3 ya está disponible. Consulta o descarga el PDF de 200 páginas.</p>
+                <span className="mt-5 inline-flex items-center gap-2 font-bold">Ver materiales <ChevronRight size={18} /></span>
               </div>
-              <button className="bg-white text-emerald-600 text-sm font-bold py-2 px-6 rounded-lg transition-colors hover:bg-emerald-50 flex items-center justify-center gap-2 w-full mt-auto">
-                <PlayCircle size={16} />
-                Ingresar a las Clases
-              </button>
+            </div>
+          </button>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-center justify-between px-2 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"><Award size={20} /></span>
+                <div><h3 className="font-bold text-gray-900 dark:text-white">Simulados</h3><p className="text-xs text-gray-500 dark:text-gray-400">Practica en condiciones de examen</p></div>
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-100 dark:divide-slate-700">
+              {[
+                { id: 'simulado3', title: 'Simulado 3', description: 'PDF comentado y examen en AnatoPlus', accent: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400', available: isPremium },
+                { id: 'simulado2', title: 'Simulado 2do Parcial', description: 'Evalúa tu preparación para el segundo parcial', accent: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400', available: canAccessSimulado },
+                { id: 'simulado', title: 'Simulado 1er Parcial', description: 'Examen cronometrado del primer parcial', accent: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400', available: canAccessSimulado },
+              ].map((simulado) => (
+                <button
+                  key={simulado.id}
+                  type="button"
+                  onClick={() => simulado.available ? onStartCustomSession([simulado.id], false) : onOpenSubscription()}
+                  className="group flex w-full items-center gap-3 rounded-xl px-2 py-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/60"
+                >
+                  <span className={`shrink-0 rounded-xl p-3 ${simulado.accent}`}>
+                    {simulado.available ? <PlayCircle size={22} /> : <Lock size={22} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-bold text-gray-900 dark:text-white">{simulado.title}</span>
+                    <span className="block truncate text-sm text-gray-500 dark:text-gray-400">{simulado.description}</span>
+                  </span>
+                  <span className="hidden shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 sm:block dark:bg-slate-700 dark:text-gray-300">
+                    {simulado.available ? 'Ingresar' : 'Premium'}
+                  </span>
+                  <ChevronRight size={18} className="shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Modules Grid */}
       <div>
