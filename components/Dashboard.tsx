@@ -63,14 +63,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isSimuladoTime = now >= simuladoStartTime;
   const canAccessSimulado = user.role === 'admin' || (isPremium && isSimuladoTime);
 
-  // Repaso 3 is highlighted for four days after publication.
-  const isRepasoNew = React.useMemo(() => {
-    const publishDate = new Date('2026-10-22T00:00:00-03:00');
-    const newUntil = new Date('2026-10-26T00:00:00-03:00');
-    const today = new Date();
-    return today >= publishDate && today < newUntil;
-  }, []);
-
   // Prepare data for the mini radar chart (Top 6 modules to keep it clean)
   const radarData = modules.slice(0, 6).map(m => ({
     subject: m.title.length > 12 ? m.title.substring(0, 9) + '...' : m.title,
@@ -233,17 +225,17 @@ const Dashboard: React.FC<DashboardProps> = ({
           <button
             type="button"
             onClick={onViewClaseRepaso}
-            className={`relative overflow-hidden min-h-[250px] rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-6 text-left text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl ${isRepasoNew ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''}`}
+            className="relative overflow-hidden min-h-[250px] rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-6 text-left text-white shadow-lg ring-2 ring-emerald-400 ring-offset-2 ring-offset-white transition-all hover:-translate-y-0.5 hover:shadow-xl dark:ring-offset-slate-900"
           >
             <BookOpen className="absolute -right-6 -bottom-6 h-44 w-44 text-white/10" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-start justify-between gap-3">
                 <span className="rounded-xl bg-white/15 p-3 backdrop-blur-sm"><FileDown size={28} /></span>
-                {isRepasoNew && <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">NUEVO · REPASO 3</span>}
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">NUEVO · REPASO 3</span>
               </div>
               <div className="mt-auto pt-8">
                 <h3 className="text-2xl font-black">Repasos</h3>
-                <p className="mt-2 max-w-sm text-sm leading-relaxed text-emerald-50">Repaso 3 ya está disponible. Consulta o descarga el PDF de 200 páginas.</p>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-emerald-50">Repaso 3 ya está disponible. Consulta o descarga el nuevo material.</p>
                 <span className="mt-5 inline-flex items-center gap-2 font-bold">Ver materiales <ChevronRight size={18} /></span>
               </div>
             </div>

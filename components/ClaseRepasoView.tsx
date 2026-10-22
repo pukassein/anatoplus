@@ -8,13 +8,6 @@ interface ClaseRepasoViewProps {
 }
 
 const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
-  const isRepasoNew = React.useMemo(() => {
-    const publishDate = new Date('2026-10-22T00:00:00-03:00');
-    const newUntil = new Date('2026-10-26T00:00:00-03:00');
-    const today = new Date();
-    return today >= publishDate && today < newUntil;
-  }, []);
-
   const repaso3PdfUrl = 'https://opszqrjbygrdmiwgbdyj.supabase.co/storage/v1/object/public/pdf/REPASO%20ANATOPLUS%203p.pdf';
 
   const videos = [
@@ -56,23 +49,19 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
       <div className="space-y-12">
         {/* Destacado: Repaso 3 */}
         <div className="space-y-6">
-          {isRepasoNew && (
-            <div className="flex items-center gap-3">
-               <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
-               <span className="text-emerald-600 font-bold uppercase tracking-wider text-sm px-4 py-1 bg-emerald-50 rounded-full border border-emerald-200 shadow-sm dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400">
-                 ¡Nuevo Repaso!
-               </span>
-               <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+             <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
+             <span className="text-emerald-600 font-bold uppercase tracking-wider text-sm px-4 py-1 bg-emerald-50 rounded-full border border-emerald-200 shadow-sm dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400">
+               ¡Nuevo Repaso!
+             </span>
+             <div className="h-px bg-emerald-200 flex-1 dark:bg-emerald-900/50"></div>
+          </div>
           
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 shadow-xl md:p-9">
-            {isRepasoNew && (
-              <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-md">NUEVO · 4 DÍAS</div>
-            )}
+            <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 shadow-md">NUEVO</div>
             <Sparkles className="absolute -bottom-8 -right-5 h-48 w-48 text-white/10" />
             <div className="relative max-w-2xl text-white">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold backdrop-blur-sm"><FileText size={16} /> PDF · 200 páginas · aprox. 22 MB</span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold backdrop-blur-sm"><FileText size={16} /> Material de repaso en PDF</span>
               <h2 className="mt-5 text-3xl font-black md:text-4xl">Repaso AnatoPlus 3</h2>
               <p className="mt-3 text-base leading-relaxed text-emerald-50 md:text-lg">Ya puedes consultar el nuevo material de repaso o descargarlo para estudiar sin conexión.</p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
