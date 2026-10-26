@@ -97,6 +97,29 @@ const ClaseRepasoView: React.FC<ClaseRepasoViewProps> = ({ user, onBack }) => {
               </p>
             </div>
           </div>
+
+          <div className="space-y-4">
+            <div className="relative overflow-hidden rounded-2xl bg-black pt-[56.25%] shadow-lg">
+              <iframe
+                className="absolute left-0 top-0 h-full w-full"
+                src="https://www.youtube.com/embed/0DmVjLn57NE"
+                title="Repaso 3er Parcial - Parte 2"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>
+            </div>
+
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
+                <PlayCircle className="text-emerald-500" size={24} />
+                Repaso 3er Parcial - Parte 2
+              </h2>
+              <p className="mt-1 text-gray-600 dark:text-gray-400">
+                Segunda parte del repaso intensivo para el 3er Parcial de Anatomía.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 pt-8">
